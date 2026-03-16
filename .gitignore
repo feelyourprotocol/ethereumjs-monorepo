@@ -122,3 +122,6 @@ __snapshots__
 
 # For local storage
 tmp/
+
+# EIP-8141 docs build output
+eip-8141-docs-dist/
