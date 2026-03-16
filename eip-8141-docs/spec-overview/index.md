@@ -45,6 +45,7 @@ EIP-8141 introduces a new [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) tr
 
 Dive deeper into each aspect of the spec:
 
+- [**Spec Chronology**](./chronology) — How EIP-8141 evolved from initial publication through community debate and multiple revisions. Essential context for understanding which parts are stable and which are in flux.
 - [**Transaction Structure**](./transaction-structure) — RLP encoding, fields, constraints, receipts, signature hash.
 - [**Frame Modes**](./frame-modes) — DEFAULT, VERIFY, SENDER modes and approval bits.
 - [**New Opcodes**](./opcodes) — APPROVE, TXPARAM, FRAMEDATALOAD, FRAMEDATACOPY.

@@ -45,6 +45,7 @@ export default defineConfig({
         text: 'Spec Overview',
         items: [
           { text: 'Introduction', link: '/spec-overview/' },
+          { text: 'Spec Chronology', link: '/spec-overview/chronology' },
           {
             text: 'Transaction Structure',
             link: '/spec-overview/transaction-structure',
