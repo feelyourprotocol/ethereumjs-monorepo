@@ -1,5 +1,9 @@
 # Design Decisions
 
+::: danger 🤖 AI-Generated Content
+This documentation is AI-generated and updated frequently. See the [home page](/) for the full disclaimer.
+:::
+
 This section documents the architectural and design choices we made (and are making) during the EIP-8141 reference implementation, along with the reasoning behind them and the alternatives we considered.
 
 ## Why Document Decisions?

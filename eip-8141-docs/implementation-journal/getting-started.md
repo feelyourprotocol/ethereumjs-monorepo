@@ -43,4 +43,6 @@ These questions will be explored in subsequent journal entries as we work throug
 
 ## Environment Setup
 
-The implementation lives in the `ethereumjs-monorepo-fyp` fork. We are working against the EthereumJS v10 release line. The documentation you are reading now is generated with VitePress in `packages/tx/eip-8141-docs/`.
+The implementation lives in the `ethereumjs-monorepo-fyp` fork (a [Feel Your Protocol](https://feelyourprotocol.org) project). We are working against the EthereumJS v10 release line. The documentation you are reading now is generated with VitePress from the `eip-8141-docs/` directory at the repository root.
+
+**EIP version:** [`ee66073`](https://github.com/ethereum/EIPs/blob/ee66073462f5c0f5db43353b5ce4183a72157327/EIPS/eip-8141.md) (March 13, 2026)

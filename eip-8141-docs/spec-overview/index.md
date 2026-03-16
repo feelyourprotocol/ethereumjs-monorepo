@@ -1,6 +1,12 @@
 # Spec Overview
 
-This section provides a structured walkthrough of [EIP-8141 "Frame Transaction"](https://eips.ethereum.org/EIPS/eip-8141), broken down into digestible pieces for implementers and anyone who wants to understand what this proposal actually does.
+::: danger 🤖 AI-Generated Content
+This documentation is AI-generated and updated frequently. Cross-reference with the [actual EIP](https://github.com/ethereum/EIPs/blob/ee66073462f5c0f5db43353b5ce4183a72157327/EIPS/eip-8141.md). See the [home page](/) for the full disclaimer.
+:::
+
+This section provides a structured walkthrough of [EIP-8141 "Frame Transaction"](https://github.com/ethereum/EIPs/blob/ee66073462f5c0f5db43353b5ce4183a72157327/EIPS/eip-8141.md), broken down into digestible pieces for implementers and anyone who wants to understand what this proposal actually does.
+
+**Based on:** EIP-8141 at commit [`ee66073`](https://github.com/ethereum/EIPs/commit/ee66073462f5c0f5db43353b5ce4183a72157327) (March 13, 2026)
 
 ## The Big Picture
 
