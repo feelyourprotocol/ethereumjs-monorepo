@@ -1,6 +1,12 @@
 # Spec Feedback
 
+::: danger 🤖 AI-Generated Content
+This documentation is AI-generated and updated frequently. See the [home page](/) for the full disclaimer.
+:::
+
 This section provides our assessment of the EIP-8141 specification from the perspective of implementers building a reference implementation. The goal is constructive feedback that helps improve the spec and informs the broader community about its current state.
+
+**Based on:** EIP-8141 at commit [`ee66073`](https://github.com/ethereum/EIPs/blob/ee66073462f5c0f5db43353b5ce4183a72157327/EIPS/eip-8141.md) (March 13, 2026)
 
 ## Our Approach
 

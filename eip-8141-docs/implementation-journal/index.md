@@ -1,5 +1,9 @@
 # Implementation Journal
 
+::: danger 🤖 AI-Generated Content
+This documentation is AI-generated and updated frequently. See the [home page](/) for the full disclaimer.
+:::
+
 This is the chronological record of our EIP-8141 reference implementation in EthereumJS. Each entry documents what we worked on, what questions came up, what surprised us, and what we learned.
 
 ## Purpose

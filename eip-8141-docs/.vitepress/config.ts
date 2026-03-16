@@ -14,7 +14,11 @@ export default defineConfig({
         text: 'Links',
         items: [
           {
-            text: 'EIP-8141 (original)',
+            text: 'EIP-8141 (snapshot used)',
+            link: 'https://github.com/ethereum/EIPs/blob/ee66073462f5c0f5db43353b5ce4183a72157327/EIPS/eip-8141.md',
+          },
+          {
+            text: 'EIP-8141 (latest)',
             link: 'https://eips.ethereum.org/EIPS/eip-8141',
           },
           {
@@ -117,8 +121,7 @@ export default defineConfig({
         'A <a href="https://feelyourprotocol.org">Feel Your Protocol</a> project — EIP-8141 reference implementation by the EthereumJS team.',
     },
     editLink: {
-      pattern:
-        'https://github.com/ethereumjs/ethereumjs-monorepo/edit/main/packages/tx/eip-8141-docs/:path',
+      pattern: 'https://github.com/ethereumjs/ethereumjs-monorepo/edit/main/eip-8141-docs/:path',
       text: 'Edit this page on GitHub',
     },
   },
