@@ -1,0 +1,87 @@
+# Clarity & Completeness
+
+This page catalogs areas where the EIP-8141 specification could be clearer or more complete, based on our implementation experience. Each item is tagged with a severity:
+
+- **Ambiguity** — the spec can be read multiple ways
+- **Gap** — the spec doesn't address something an implementer needs to know
+- **Suggestion** — the spec is clear but could be improved
+
+::: tip
+Items are updated as we progress through the implementation. Some may be resolved by spec updates or through discussion with the authors.
+:::
+
+## Transaction Structure
+
+### RLP Encoding of Null Target
+
+**Type: Gap**
+
+The spec says `target` can be `None`, which resolves to `tx.sender` during execution. But the RLP encoding of `None` is not specified. Is it an empty byte string (`0x80`), the RLP encoding of zero (`0x80` again), or something else? For a canonical encoding, this matters.
+
+### Mode Field Encoding
+
+**Type: Ambiguity**
+
+The `mode` field uses bits 0-7 for the execution mode and bits 9-10 for approval bits. The spec describes this in two separate sections (Frame Modes and Approval Bits). It would help to have a single consolidated definition of the mode field format, including its RLP encoding (is it always encoded as a uint16? minimal-length integer?).
+
+### Receipt Compatibility
+
+**Type: Gap**
+
+The new receipt format `[cumulative_gas_used, payer, [frame_receipt, ...]]` differs from the standard receipt format. How does this interact with existing tooling (block explorers, indexers, RPC methods like `eth_getTransactionReceipt`)? Should there be guidance on JSON-RPC representation?
+
+## Opcodes
+
+### TXPARAM Parameter Numbering
+
+**Type: Suggestion**
+
+The `param` values jump from `0x09` to `0x10` (skipping `0x0A`-`0x0F`). This appears intentional (separating transaction-level from frame-level params) but is worth calling out explicitly in the spec to prevent implementers from treating it as an error.
+
+### APPROVE Interaction with STATICCALL
+
+**Type: Ambiguity**
+
+`VERIFY` frames execute as `STATICCALL` (no state changes). But `APPROVE` with scope `0x1` or `0x2` *increments the nonce* and *deducts the gas cost* — both are state changes. The spec implies these happen at a "transaction scope" level that transcends the STATICCALL restriction, but this isn't stated explicitly. An implementer needs to know: do these state changes happen even though the frame is a STATICCALL? (We believe yes, but it should be explicit.)
+
+### FRAMEDATACOPY Memory Behavior for VERIFY Frames
+
+**Type: Ambiguity**
+
+When `FRAMEDATACOPY` targets a `VERIFY` frame, "no data is copied." Does the destination memory region still get zero-filled (as with standard memory expansion), or is it left untouched? This matters for gas calculation (memory expansion cost).
+
+## Execution Behavior
+
+### Revert Semantics for Non-VERIFY Frames
+
+**Type: Suggestion**
+
+The spec says "If a frame's execution reverts, its state changes are discarded and execution proceeds to the next frame." This is clear for `DEFAULT` and `SENDER` frames. But it raises a question: is there any signal back to the transaction author that a frame reverted? The per-frame `status` in the receipt covers this, but it might be worth noting explicitly that non-VERIFY frame reverts are "soft failures" — the transaction continues.
+
+### ORIGIN Throughout Call Depths
+
+**Type: Gap**
+
+The spec says `ORIGIN` returns the frame's `caller` "throughout all call depths." How does this interact with `DELEGATECALL`? In a `DELEGATECALL` chain, `ORIGIN` currently always returns the original external caller. With frame transactions, is it always the frame's caller regardless of `DELEGATECALL`?
+
+## Default Code
+
+### P256 Key-to-Address Derivation
+
+**Type: Suggestion**
+
+The spec says for P256: `frame.target != keccak(qx|qy)[12:]`. This is the Ethereum address derivation from a public key — but applied to a P256 key rather than secp256k1. It might be worth noting that this means P256-based accounts have addresses derived differently from traditional EOAs, and there's an implicit expectation that the user *knows* their P256-derived address.
+
+### Default Code Error Handling
+
+**Type: Gap**
+
+What happens if the RLP decoding of calls in `SENDER` mode fails (malformed data)? The spec shows `calls = rlp_decode(frame.data[1:])` but doesn't specify behavior for decode errors. Presumably the frame should revert, but it's worth stating.
+
+## Security Section
+
+### Mempool Validation Strategy
+
+**Type: Gap**
+
+The security section acknowledges the DoS problem but says "Node implementations *should consider* restricting which opcodes..." A concrete recommended validation strategy (even as an informative appendix) would be very helpful for implementers. The reference to ERC-7562 is useful but leaves the details to the reader.
