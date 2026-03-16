@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'EIP-8141 Frame Transaction',
   description:
     'Reference implementation docs for EIP-8141 — implementation journal, design decisions, and spec feedback from the EthereumJS team',
+  outDir: '../eip-8141-docs-dist',
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
