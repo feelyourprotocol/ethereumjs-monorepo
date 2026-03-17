@@ -78,4 +78,11 @@ export const paramsTx: ParamsDict = {
   7825: {
     maxTransactionGasLimit: 16777216, // Maximum gas limit for a single transaction (2^24)
   },
+  /**
+   * Frame Transaction
+   */
+  8141: {
+    frameTxIntrinsicCost: 15000, // Per-transaction base cost for frame transactions
+    maxFrames: 1000, // Maximum number of frames per transaction (10^3)
+  },
 }

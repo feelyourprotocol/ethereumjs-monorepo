@@ -576,4 +576,13 @@ export const eipsDict: EIPsDict = {
     minimumHardfork: Hardfork.Cancun,
     requiredEIPs: [],
   },
+  /**
+   * Description : Frame Transaction
+   * URL         : https://github.com/ethereum/EIPs/blob/ee66073462f5c0f5db43353b5ce4183a72157327/EIPS/eip-8141.md
+   * Status      : Draft
+   */
+  8141: {
+    minimumHardfork: Hardfork.Prague,
+    requiredEIPs: [2718, 4844],
+  },
 }
