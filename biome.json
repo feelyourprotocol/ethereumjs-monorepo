@@ -18,7 +18,9 @@
       "**/4844-interop/**",
       "**/scripts/**",
       "**/rlp/bin/**",
-      "**/benchmarks/fixture/**"
+      "**/benchmarks/fixture/**",
+      "**/eip-8141-docs/**",
+      "**/eip-8141-docs-dist/**"
     ]
   },
   "formatter": {
