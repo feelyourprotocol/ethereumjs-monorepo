@@ -39,7 +39,7 @@ The EIP is in **Draft** status and evolving quickly. If you're reading this and 
 
 These docs are **fully AI-generated** as part of an experimental human-AI collaboration workflow. Here's what that means concretely:
 
-**The setup:** A human ([@hdrewes](https://github.com/hdrewes)) steers the direction, asks the questions, reviews the output, and makes editorial decisions. An AI assistant (Claude, via [Cursor](https://cursor.sh)) produces the actual prose, analysis, code, and structure.
+**The setup:** A human ([@holgerd77](https://github.com/holgerd77)) steers the direction, asks the questions, reviews the output, and makes editorial decisions. An AI assistant (Claude, via [Cursor](https://cursor.sh)) produces the actual prose, analysis, code, and structure.
 
 **What this implies:**
 
