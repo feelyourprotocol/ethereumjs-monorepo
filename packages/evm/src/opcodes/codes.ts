@@ -387,6 +387,15 @@ const eipOpcodes: { eip: number; opcodes: OpcodeEntry }[] = [
       0x1e: defaultOp('CLZ'),
     },
   },
+  {
+    eip: 8141,
+    opcodes: {
+      0xaa: asyncOp('APPROVE'),
+      0xb0: defaultOp('TXPARAM'),
+      0xb1: defaultOp('FRAMEDATALOAD'),
+      0xb2: dynamicGasOp('FRAMEDATACOPY'),
+    },
+  },
 ]
 
 /**

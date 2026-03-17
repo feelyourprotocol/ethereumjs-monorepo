@@ -410,4 +410,14 @@ export const paramsEVM: ParamsDict = {
     // gasPrices
     clzGas: 5, // Base fee of the CLZ opcode (matching MUL as per EIP-7939)
   },
+  /**
+   * EIP-8141: Frame Transaction
+   */
+  8141: {
+    // gasPrices
+    approveGas: 0, // Base fee of the APPROVE opcode (terminates frame like RETURN)
+    txparamGas: 2, // Base fee of the TXPARAM opcode
+    framedataloadGas: 3, // Base fee of the FRAMEDATALOAD opcode (matches CALLDATALOAD)
+    framedatacopyGas: 3, // Base fee of the FRAMEDATACOPY opcode (matches CALLDATACOPY)
+  },
 }

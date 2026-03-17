@@ -1,4 +1,5 @@
 import {
+  Account,
   Address,
   BIGINT_0,
   BIGINT_1,
@@ -23,6 +24,7 @@ import {
   bytesToHex,
   bytesToInt,
   concatBytes,
+  equalsBytes,
   setLengthLeft,
   setLengthRight,
 } from '@ethereumjs/util'
@@ -1698,6 +1700,224 @@ export const handlers: Map<number, OpHandler> = new Map([
       const selfdestructToAddressBigInt = runState.stack.pop()
       const selfdestructToAddress = createAddressFromStackBigInt(selfdestructToAddressBigInt)
       return runState.interpreter.selfDestruct(selfdestructToAddress)
+    },
+  ],
+  // EIP-8141: Frame Transaction opcodes
+  // 0xaa: APPROVE
+  [
+    0xaa,
+    async function (runState: RunState) {
+      const scope = runState.stack.pop()
+      const evm = runState.interpreter._evm
+      const ctx = (evm as any).frameTransactionContext as
+        | import('../frameContext.ts').FrameTransactionContext
+        | undefined
+      if (ctx === undefined) {
+        return trap(EVMError.errorMessages.REVERT)
+      }
+
+      const address = runState.env.address
+      const currentFrame = ctx.frames[ctx.currentFrameIndex]
+      const frameTarget = currentFrame.target ?? ctx.sender
+      if (!equalsBytes(address.bytes, frameTarget.bytes)) {
+        trap(EVMError.errorMessages.REVERT)
+      }
+
+      if (scope === BIGINT_0) {
+        if (ctx.senderApproved) trap(EVMError.errorMessages.REVERT)
+        if (!equalsBytes(frameTarget.bytes, ctx.sender.bytes)) {
+          trap(EVMError.errorMessages.REVERT)
+        }
+        ctx.senderApproved = true
+      } else if (scope === BIGINT_1) {
+        if (ctx.payerApproved) trap(EVMError.errorMessages.REVERT)
+        if (!ctx.senderApproved) trap(EVMError.errorMessages.REVERT)
+        let account = await runState.stateManager.getAccount(frameTarget)
+        if (account === undefined) account = new Account()
+        if (account.balance < ctx.totalGasCost + ctx.totalBlobGasCost) {
+          trap(EVMError.errorMessages.REVERT)
+        }
+        account.nonce += BIGINT_1
+        account.balance -= ctx.totalGasCost + ctx.totalBlobGasCost
+        await runState.stateManager.putAccount(frameTarget, account)
+        ctx.payerApproved = true
+        ctx.payer = frameTarget
+      } else if (scope === BIGINT_2) {
+        if (ctx.senderApproved || ctx.payerApproved) {
+          trap(EVMError.errorMessages.REVERT)
+        }
+        if (!equalsBytes(frameTarget.bytes, ctx.sender.bytes)) {
+          trap(EVMError.errorMessages.REVERT)
+        }
+        let account = await runState.stateManager.getAccount(frameTarget)
+        if (account === undefined) account = new Account()
+        if (account.balance < ctx.totalGasCost + ctx.totalBlobGasCost) {
+          trap(EVMError.errorMessages.REVERT)
+        }
+        ctx.senderApproved = true
+        account.nonce += BIGINT_1
+        account.balance -= ctx.totalGasCost + ctx.totalBlobGasCost
+        await runState.stateManager.putAccount(frameTarget, account)
+        ctx.payerApproved = true
+        ctx.payer = frameTarget
+      } else {
+        trap(EVMError.errorMessages.REVERT)
+      }
+
+      ctx.approveCalledInCurrentFrame = true
+      runState.interpreter.finish(new Uint8Array(0))
+    },
+  ],
+  // 0xb0: TXPARAM
+  [
+    0xb0,
+    function (runState: RunState) {
+      const [param, in2] = runState.stack.popN(2)
+      const evm = runState.interpreter._evm
+      const ctx = (evm as any).frameTransactionContext as
+        | import('../frameContext.ts').FrameTransactionContext
+        | undefined
+      if (ctx === undefined) {
+        return trap(EVMError.errorMessages.INVALID_OPCODE)
+      }
+      const paramNum = Number(param)
+      switch (paramNum) {
+        case 0x00:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(ctx.txType))
+          break
+        case 0x01:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(ctx.nonce)
+          break
+        case 0x02:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(bytesToBigInt(ctx.sender.bytes))
+          break
+        case 0x03:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(ctx.maxPriorityFeePerGas)
+          break
+        case 0x04:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(ctx.maxFeePerGas)
+          break
+        case 0x05:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(ctx.maxFeePerBlobGas)
+          break
+        case 0x06:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(ctx.totalGasCost + ctx.totalBlobGasCost)
+          break
+        case 0x07:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(ctx.blobVersionedHashes.length))
+          break
+        case 0x08:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(bytesToBigInt(ctx.sigHash))
+          break
+        case 0x09:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(ctx.frames.length))
+          break
+        case 0x10:
+          if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(ctx.currentFrameIndex))
+          break
+        case 0x11: {
+          const idx = Number(in2)
+          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          const t = ctx.frames[idx].target
+          runState.stack.push(t !== null ? bytesToBigInt(t.bytes) : bytesToBigInt(ctx.sender.bytes))
+          break
+        }
+        case 0x12: {
+          const idx = Number(in2)
+          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(ctx.frames[idx].gasLimit)
+          break
+        }
+        case 0x13: {
+          const idx = Number(in2)
+          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(ctx.frames[idx].mode))
+          break
+        }
+        case 0x14: {
+          const idx = Number(in2)
+          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          const frame = ctx.frames[idx]
+          if (frame.mode === 1) {
+            runState.stack.push(BIGINT_0)
+          } else {
+            runState.stack.push(BigInt(frame.data.length))
+          }
+          break
+        }
+        case 0x15: {
+          const idx = Number(in2)
+          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          if (idx >= ctx.currentFrameIndex) trap(EVMError.errorMessages.INVALID_OPCODE)
+          const fr = ctx.frameResults[idx]
+          if (fr === undefined) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(fr.status))
+          break
+        }
+        default:
+          trap(EVMError.errorMessages.INVALID_OPCODE)
+      }
+    },
+  ],
+  // 0xb1: FRAMEDATALOAD
+  [
+    0xb1,
+    function (runState: RunState) {
+      const [offset, frameIndex] = runState.stack.popN(2)
+      const evm = runState.interpreter._evm
+      const ctx = (evm as any).frameTransactionContext as
+        | import('../frameContext.ts').FrameTransactionContext
+        | undefined
+      if (ctx === undefined) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const idx = Number(frameIndex)
+      if (idx >= ctx.frames.length) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const frame = ctx.frames[idx]
+      if (frame.mode === 1) {
+        runState.stack.push(BIGINT_0)
+        return
+      }
+      const i = Number(offset)
+      let loaded = frame.data.subarray(i, i + 32)
+      loaded = loaded.length > 0 ? loaded : Uint8Array.from([0])
+      let r = bytesToBigInt(loaded)
+      if (loaded.length < 32) {
+        r = r << (BIGINT_8 * BigInt(32 - loaded.length))
+      }
+      runState.stack.push(r)
+    },
+  ],
+  // 0xb2: FRAMEDATACOPY
+  [
+    0xb2,
+    function (runState: RunState) {
+      const [memOffset, dataOffset, length, frameIndex] = runState.stack.popN(4)
+      const evm = runState.interpreter._evm
+      const ctx = (evm as any).frameTransactionContext as
+        | import('../frameContext.ts').FrameTransactionContext
+        | undefined
+      if (ctx === undefined) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const idx = Number(frameIndex)
+      if (idx >= ctx.frames.length) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const frame = ctx.frames[idx]
+      if (frame.mode === 1 || length === BIGINT_0) {
+        return
+      }
+      const data = getDataSlice(frame.data, dataOffset, length)
+      const memOffsetNum = Number(memOffset)
+      const lengthNum = Number(length)
+      runState.memory.extend(memOffsetNum, lengthNum)
+      runState.memory.write(memOffsetNum, lengthNum, data)
     },
   ],
 ])
