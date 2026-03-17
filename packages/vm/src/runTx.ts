@@ -1,7 +1,8 @@
 import { cliqueSigner, createBlockHeader } from '@ethereumjs/block'
 import { ConsensusType, Hardfork } from '@ethereumjs/common'
 import { BinaryTreeAccessWitness, type EVM } from '@ethereumjs/evm'
-import { Capability, isBlob4844Tx } from '@ethereumjs/tx'
+import { Capability, isBlob4844Tx, isFrameEIP8141Tx } from '@ethereumjs/tx'
+import type { FrameEIP8141Tx } from '@ethereumjs/tx'
 import {
   Account,
   Address,
@@ -26,6 +27,7 @@ import debugDefault from 'debug'
 
 import { Bloom } from './bloom/index.ts'
 import { emitEVMProfile } from './emitEVMProfile.ts'
+import { runFrameTransaction } from './runFrameTx.ts'
 
 import type { Block } from '@ethereumjs/block'
 import type { Common } from '@ethereumjs/common'
@@ -410,15 +412,17 @@ export async function runTx(vm: VM, opts: RunTxOpts): Promise<RunTxResult> {
       throw EthereumJSErrorWithoutCode(msg)
     }
 
-    const castedTx = opts.tx as AccessList2930Tx
+    if (!isFrameEIP8141Tx(opts.tx)) {
+      const castedTx = opts.tx as AccessList2930Tx
 
-    for (const accessListItem of castedTx.accessList) {
-      const [addressBytes, slotBytesList] = accessListItem
-      // Using deprecated bytesToUnprefixedHex for performance: journal methods expect unprefixed hex strings for Map/Set lookups.
-      const address = bytesToUnprefixedHex(addressBytes)
-      vm.evm.journal.addAlwaysWarmAddress(address, true)
-      for (const storageKey of slotBytesList) {
-        vm.evm.journal.addAlwaysWarmSlot(address, bytesToUnprefixedHex(storageKey), true)
+      for (const accessListItem of castedTx.accessList) {
+        const [addressBytes, slotBytesList] = accessListItem
+        // Using deprecated bytesToUnprefixedHex for performance: journal methods expect unprefixed hex strings for Map/Set lookups.
+        const address = bytesToUnprefixedHex(addressBytes)
+        vm.evm.journal.addAlwaysWarmAddress(address, true)
+        for (const storageKey of slotBytesList) {
+          vm.evm.journal.addAlwaysWarmSlot(address, bytesToUnprefixedHex(storageKey), true)
+        }
       }
     }
   }
@@ -595,7 +599,8 @@ async function _runTx(vm: VM, opts: RunTxOpts): Promise<RunTxResult> {
   }
 
   // EIP-3607: Reject transactions from senders with deployed code
-  if (!equalsBytes(fromAccount.codeHash, KECCAK256_NULL)) {
+  // EIP-8141 frame transactions allow smart accounts (sender may have code)
+  if (!equalsBytes(fromAccount.codeHash, KECCAK256_NULL) && !isFrameEIP8141Tx(tx)) {
     const isActive7702 = vm.common.isActivatedEIP(7702)
     switch (isActive7702) {
       case true: {
@@ -745,72 +750,101 @@ async function _runTx(vm: VM, opts: RunTxOpts): Promise<RunTxResult> {
   }
 
   // ===========================
-  // STATE UPDATE: Deduct Costs
+  // EIP-8141: Frame Transaction Execution (separate path)
   // ===========================
-  const txCost = tx.gasLimit * gasPrice
-  const blobGasCost = totalblobGas * blobGasPrice
-  const senderOriginalBalance = fromAccount.balance
-  fromAccount.balance -= txCost
-  fromAccount.balance -= blobGasCost
-  if (opts.skipBalance === true && fromAccount.balance < BIGINT_0) {
-    fromAccount.balance = BIGINT_0
-  }
-  await vm.evm.journal.putAccount(caller, fromAccount)
-
-  if (vm.common.isActivatedEIP(7928)) {
-    vm.evm.blockLevelAccessList!.addBalanceChange(
-      caller.toString(),
-      fromAccount.balance,
-      vm.evm.blockLevelAccessList!.blockAccessIndex,
-      senderOriginalBalance,
-    )
-  }
-
-  // Process EIP-7702 authorization list (if applicable)
+  let results: RunTxResult
+  let txCost: bigint
+  let blobGasCost: bigint
   let gasRefund = BIGINT_0
-  if (tx.supports(Capability.EIP7702EOACode)) {
-    gasRefund = await processAuthorizationList(vm, tx as EIP7702CompatibleTx, caller, gasRefund)
-  }
 
-  if (vm.DEBUG) {
-    debug(`Update fromAccount (caller) balance (-> ${fromAccount.balance}))`)
-  }
-  let executionTimerPrecise: number
-  if (enableProfiler) {
-    // eslint-disable-next-line no-console
-    console.timeEnd(balanceNonceLabel)
-    executionTimerPrecise = performance.now()
-  }
+  let executionTimerPrecise: number | undefined
+  if (isFrameEIP8141Tx(tx)) {
+    // Frame transactions: gas deduction and nonce increment happen inside APPROVE
+    txCost = BIGINT_0
+    blobGasCost = BIGINT_0
 
-  // ===========================
-  // EXECUTION: Run EVM Call
-  // ===========================
-  const { value, data, to } = tx
+    if (enableProfiler) {
+      // eslint-disable-next-line no-console
+      console.timeEnd(balanceNonceLabel)
+      executionTimerPrecise = performance.now()
+    }
 
-  if (vm.DEBUG) {
-    debug(
-      `Running tx=${
-        tx.isSigned() ? bytesToHex(tx.hash()) : 'unsigned'
-      } with caller=${caller} gasLimit=${gasLimit} to=${
-        to?.toString() ?? 'none'
-      } value=${value} data=${short(data)}`,
+    results = await runFrameTransaction(
+      vm,
+      tx as unknown as FrameEIP8141Tx,
+      gasPrice,
+      blobGasPrice,
+      intrinsicGas,
+      block,
+      opts,
     )
-  }
+  } else {
+    // ===========================
+    // STATE UPDATE: Deduct Costs (standard transactions)
+    // ===========================
+    txCost = tx.gasLimit * gasPrice
+    blobGasCost = totalblobGas * blobGasPrice
+    const senderOriginalBalance = fromAccount.balance
+    fromAccount.balance -= txCost
+    fromAccount.balance -= blobGasCost
+    if (opts.skipBalance === true && fromAccount.balance < BIGINT_0) {
+      fromAccount.balance = BIGINT_0
+    }
+    await vm.evm.journal.putAccount(caller, fromAccount)
 
-  const results = (await vm.evm.runCall({
-    block,
-    gasPrice,
-    caller,
-    gasLimit,
-    to,
-    value,
-    data,
-    blobVersionedHashes,
-    accessWitness: txAccesses,
-  })) as RunTxResult
+    if (vm.common.isActivatedEIP(7928)) {
+      vm.evm.blockLevelAccessList!.addBalanceChange(
+        caller.toString(),
+        fromAccount.balance,
+        vm.evm.blockLevelAccessList!.blockAccessIndex,
+        senderOriginalBalance,
+      )
+    }
 
-  if (vm.common.isActivatedEIP(7864)) {
-    ;(stateAccesses as BinaryTreeAccessWitness)?.merge(txAccesses! as BinaryTreeAccessWitness)
+    // Process EIP-7702 authorization list (if applicable)
+    if (tx.supports(Capability.EIP7702EOACode)) {
+      gasRefund = await processAuthorizationList(vm, tx as EIP7702CompatibleTx, caller, gasRefund)
+    }
+
+    if (vm.DEBUG) {
+      debug(`Update fromAccount (caller) balance (-> ${fromAccount.balance}))`)
+    }
+    if (enableProfiler) {
+      // eslint-disable-next-line no-console
+      console.timeEnd(balanceNonceLabel)
+      executionTimerPrecise = performance.now()
+    }
+
+    // ===========================
+    // EXECUTION: Run EVM Call
+    // ===========================
+    const { value, data, to } = tx
+
+    if (vm.DEBUG) {
+      debug(
+        `Running tx=${
+          tx.isSigned() ? bytesToHex(tx.hash()) : 'unsigned'
+        } with caller=${caller} gasLimit=${gasLimit} to=${
+          to?.toString() ?? 'none'
+        } value=${value} data=${short(data)}`,
+      )
+    }
+
+    results = (await vm.evm.runCall({
+      block,
+      gasPrice,
+      caller,
+      gasLimit,
+      to,
+      value,
+      data,
+      blobVersionedHashes,
+      accessWitness: txAccesses,
+    })) as RunTxResult
+
+    if (vm.common.isActivatedEIP(7864)) {
+      ;(stateAccesses as BinaryTreeAccessWitness)?.merge(txAccesses! as BinaryTreeAccessWitness)
+    }
   }
 
   if (enableProfiler) {
@@ -894,43 +928,62 @@ async function _runTx(vm: VM, opts: RunTxOpts): Promise<RunTxResult> {
 
   results.amountSpent = results.totalGasSpent * gasPrice
 
-  // Update sender's balance
-  fromAccount = await state.getAccount(caller)
-  if (fromAccount === undefined) {
-    fromAccount = new Account()
-  }
-  const actualTxCost = results.totalGasSpent * gasPrice
-  const txCostDiff = txCost - actualTxCost
-  const originalBalance = fromAccount.balance
-  fromAccount.balance += txCostDiff
+  // Update sender/payer balance with gas refund
+  if (isFrameEIP8141Tx(tx)) {
+    // EIP-8141: refund unused gas to the payer (set by APPROVE)
+    const frameTx = tx as unknown as FrameEIP8141Tx
+    const payer = frameTx.getSenderAddress() // For Example 1, payer == sender
+    let payerAccount = await state.getAccount(payer)
+    if (payerAccount === undefined) payerAccount = new Account()
+    const gasCostCharged = frameTx.gasLimit * gasPrice
+    const actualGasCost = results.totalGasSpent * gasPrice
+    const payerRefund = gasCostCharged - actualGasCost
+    if (payerRefund > BIGINT_0) {
+      payerAccount.balance += payerRefund
+      await vm.evm.journal.putAccount(payer, payerAccount)
+    }
+    if (vm.DEBUG) {
+      debug(
+        `EIP-8141: Refunded ${payerRefund} to payer ${payer} (charged=${gasCostCharged} actual=${actualGasCost})`,
+      )
+    }
+  } else {
+    fromAccount = await state.getAccount(caller)
+    if (fromAccount === undefined) {
+      fromAccount = new Account()
+    }
+    const actualTxCost = results.totalGasSpent * gasPrice
+    const txCostDiff = txCost - actualTxCost
+    const originalBalance = fromAccount.balance
+    fromAccount.balance += txCostDiff
 
-  if (vm.common.isActivatedEIP(7928)) {
-    vm.evm.blockLevelAccessList!.addBalanceChange(
-      caller.toString(),
-      fromAccount.balance,
-      vm.evm.blockLevelAccessList!.blockAccessIndex,
-      originalBalance,
-    )
-    vm.evm.blockLevelAccessList!.addNonceChange(
-      caller.toString(),
-      fromAccount.nonce,
-      vm.evm.blockLevelAccessList!.blockAccessIndex,
-    )
-  }
+    if (vm.common.isActivatedEIP(7928)) {
+      vm.evm.blockLevelAccessList!.addBalanceChange(
+        caller.toString(),
+        fromAccount.balance,
+        vm.evm.blockLevelAccessList!.blockAccessIndex,
+        originalBalance,
+      )
+      vm.evm.blockLevelAccessList!.addNonceChange(
+        caller.toString(),
+        fromAccount.nonce,
+        vm.evm.blockLevelAccessList!.blockAccessIndex,
+      )
+    }
 
-  await vm.evm.journal.putAccount(caller, fromAccount)
-  // EIP-7928: Track sender balance change for gas refund in Block Access List
-  if (vm.common.isActivatedEIP(7928) && txCostDiff > BIGINT_0) {
-    vm.evm.blockLevelAccessList!.addBalanceChange(
-      caller.toString(),
-      fromAccount.balance,
-      vm.evm.blockLevelAccessList!.blockAccessIndex,
-    )
-  }
-  if (vm.DEBUG) {
-    debug(
-      `Refunded txCostDiff (${txCostDiff}) to fromAccount (caller) balance (-> ${fromAccount.balance})`,
-    )
+    await vm.evm.journal.putAccount(caller, fromAccount)
+    if (vm.common.isActivatedEIP(7928) && txCostDiff > BIGINT_0) {
+      vm.evm.blockLevelAccessList!.addBalanceChange(
+        caller.toString(),
+        fromAccount.balance,
+        vm.evm.blockLevelAccessList!.blockAccessIndex,
+      )
+    }
+    if (vm.DEBUG) {
+      debug(
+        `Refunded txCostDiff (${txCostDiff}) to fromAccount (caller) balance (-> ${fromAccount.balance})`,
+      )
+    }
   }
 
   // Update miner's balance

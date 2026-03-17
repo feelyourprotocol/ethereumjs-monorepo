@@ -197,6 +197,9 @@ export class EVM implements EVMInterface {
   }
   protected _block?: Block
 
+  /** EIP-8141 frame transaction context, set by the VM during frame tx execution */
+  public frameTransactionContext?: import('./frameContext.ts').FrameTransactionContext
+
   public readonly common: Common
   public readonly events: EventEmitter<EVMEvent>
 
@@ -293,7 +296,7 @@ export class EVM implements EVMInterface {
       1153, 1559, 2537, 2565, 2718, 2929, 2930, 2935, 3198, 3529, 3540, 3541, 3607, 3651, 3670,
       3855, 3860, 4200, 4399, 4750, 4788, 4844, 4895, 5133, 5450, 5656, 6110, 6206, 6780, 7002,
       7069, 7251, 7480, 7516, 7594, 7620, 7685, 7691, 7692, 7698, 7702, 7709, 7823, 7825, 7934,
-      7939, 7951, 8024,
+      7939, 7951, 8024, 8141,
     ]
 
     for (const eip of this.common.eips()) {

@@ -1317,3 +1317,13 @@ const logDynamicFunc = dynamicGasHandlers.get(0xa0)!
 for (let i = 0xa1; i <= 0xa4; i++) {
   dynamicGasHandlers.set(i, logDynamicFunc)
 }
+
+// EIP-8141: FRAMEDATACOPY dynamic gas (matches CALLDATACOPY)
+dynamicGasHandlers.set(0xb2, async function (runState, gas, common): Promise<bigint> {
+  const [memOffset, _dataOffset, dataLength] = runState.stack.peek(4)
+  gas += subMemUsage(runState, memOffset, dataLength, common)
+  if (dataLength !== BIGINT_0) {
+    gas += common.param('copyGas') * divCeil(dataLength, BIGINT_32)
+  }
+  return gas
+})
