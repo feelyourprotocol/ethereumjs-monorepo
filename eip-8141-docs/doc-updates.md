@@ -4,7 +4,17 @@ This page tracks what changed in the documentation with each update. Newest entr
 
 ---
 
-## March 17, 2026 (Update)
+## March 17, 2026 (Update 2)
+
+**EVM & VM vertical integration** — the "Simple Transaction" flow works end-to-end.
+
+- **[EVM Integration](/implementation-journal/evm-integration)** — completely rewritten journal entry documenting the full vertical integration: `FrameTransactionContext`, four new opcodes, frame execution loop, default code for EOAs, and 6 running examples
+- **[Spec Feedback: New Findings](/spec-feedback/clarity-and-completeness)** — three new findings: accessList assumption in typed transactions, default code as non-EVM execution, dual APPROVE implementation requirement
+- **Code changes:** `frameContext.ts` in EVM, opcode handlers (functions.ts, gas.ts, codes.ts), `runFrameTx.ts` in VM, `runTx.ts` modifications for frame tx handling, 14 new tests (12 EVM + 2 VM), 6 new examples (3 EVM + 3 VM)
+
+---
+
+## March 17, 2026 (Update 1)
 
 **First implementation day** — `FrameEIP8141Tx` scaffolded in `@ethereumjs/tx`.
 
