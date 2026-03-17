@@ -23,6 +23,10 @@ export default defineConfig({
             link: 'https://eips.ethereum.org/EIPS/eip-8141',
           },
           {
+            text: 'Implementation PR',
+            link: 'https://github.com/feelyourprotocol/ethereumjs-monorepo/pull/1',
+          },
+          {
             text: 'EthereumJS Monorepo',
             link: 'https://github.com/ethereumjs/ethereumjs-monorepo',
           },
@@ -40,7 +44,11 @@ export default defineConfig({
     sidebar: [
       {
         text: 'Introduction',
-        items: [{ text: 'About This Project', link: '/' }],
+        items: [
+          { text: 'Home', link: '/' },
+          { text: 'About This Project', link: '/about' },
+          { text: 'Doc Updates', link: '/doc-updates' },
+        ],
       },
       {
         text: 'Spec Overview',
@@ -112,7 +120,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: 'github',
-        link: 'https://github.com/ethereumjs/ethereumjs-monorepo',
+        link: 'https://github.com/feelyourprotocol/ethereumjs-monorepo/pull/1',
       },
     ],
     search: {

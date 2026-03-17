@@ -6,6 +6,10 @@ This documentation is AI-generated and updated frequently. See the [home page](/
 
 This is the chronological record of our EIP-8141 reference implementation in EthereumJS. Each entry documents what we worked on, what questions came up, what surprised us, and what we learned.
 
+::: tip Follow the Code
+The implementation lives in an open PR: **[EIP-8141 Frame Transactions (PR #1)](https://github.com/feelyourprotocol/ethereumjs-monorepo/pull/1)**. You can follow along with the code changes, review commits, and leave comments.
+:::
+
 ## Purpose
 
 Building a reference implementation of a draft EIP is a different exercise from implementing a finalized spec. The spec is a moving target, ambiguities are expected, and the implementation itself becomes a tool for testing and refining the specification.
