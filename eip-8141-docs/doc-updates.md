@@ -4,6 +4,16 @@ This page tracks what changed in the documentation with each update. Newest entr
 
 ---
 
+## March 17, 2026 (Update)
+
+**First implementation day** — `FrameEIP8141Tx` scaffolded in `@ethereumjs/tx`.
+
+- **[Transaction Parsing](/implementation-journal/transaction-parsing)** — new journal entry documenting the full tx type scaffolding, the `TransactionInterface` friction story, computed gas limit, and signature hash VERIFY data elision
+- **[Spec Feedback: Transaction Structure](/spec-feedback/clarity-and-completeness#radical-departure-from-base-transaction-shape)** — new finding on how Frame TX breaks all base transaction assumptions and the practical implications for implementers
+- **Code changes:** EIP-8141 Common activation, tx params, `FrameEIP8141Tx` class with constructors, capabilities, factory integration, 39 tests (all passing), and example
+
+---
+
 ## March 17, 2026
 
 **Initial public release** — the documentation goes live at [eip-8141-docs.feelyourprotocol.org](https://eip-8141-docs.feelyourprotocol.org).
@@ -16,9 +26,3 @@ This page tracks what changed in the documentation with each update. Newest entr
 - **[Design Decisions](/design-decisions/)** — framework for documenting architecture choices and trade-offs as the implementation progresses
 - **[Spec Feedback](/spec-feedback/)** — initial assessment covering clarity/completeness issues, protocol alignment analysis (EIP-2718, 1559, 4844, 7702, 2929, 1153), and strategic fit evaluation (PQ security, AA, UX, decentralization)
 - **[About](/about)** — project context, audience guide, EIP version reference, and the AI experiment disclaimer
-
-### Coming next:
-
-- First actual implementation code in `@ethereumjs/tx` — new transaction type class
-- Updated journal entries with real implementation experiences
-- Refinements to spec feedback based on hands-on findings

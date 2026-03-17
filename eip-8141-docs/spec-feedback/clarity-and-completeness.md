@@ -12,6 +12,24 @@ Items are updated as we progress through the implementation. Some may be resolve
 
 ## Transaction Structure
 
+### Radical Departure from Base Transaction Shape
+
+**Type: Suggestion** — *Added March 17, 2026 after initial tx scaffolding*
+
+EIP-8141 is the first transaction type that breaks **all** shared assumptions of the existing transaction model:
+
+- No `to`, `value`, `data` at top level (replaced by frames)
+- No `gasLimit` as explicit field (computed from frames)
+- No `v`, `r`, `s` signature fields (validation through VERIFY frames)
+- Explicit `sender` instead of ECDSA-derived sender
+- No `accessList` (EIP-2930, explicitly omitted)
+
+While each of these decisions is individually well-motivated in the Rationale section, their combined effect makes it very hard for existing client implementations to accommodate Frame TX within the existing transaction abstraction. In EthereumJS, the `TransactionInterface` mandates all these fields and associated methods (`sign()`, `addSignature()`, `verifySignature()`, `getSenderPublicKey()`).
+
+**Observation for spec authors:** It might be worth acknowledging this structural incompatibility in the spec or in an informative appendix. Implementers need to either (a) refactor their transaction abstractions, or (b) provide dummy/throwing implementations for ~8 interface methods. We chose (b) for pragmatism.
+
+**Specific practical issue:** `gasLimit` not being an explicit field means it doesn't round-trip through RLP serialization — it must be recomputed after deserialization. This is different from every other tx type and could surprise implementers and downstream consumers (block explorers, indexers) who assume `gasLimit` is a first-class stored field.
+
 ### RLP Encoding of Null Target
 
 **Type: Gap**

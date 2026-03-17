@@ -25,7 +25,7 @@ This journal captures that process honestly — not just the "what" but the "why
 Entries are organized by topic rather than strictly by date, though each entry notes when it was written. The topics roughly follow the implementation order:
 
 1. **[Getting Started](./getting-started)** — Initial setup, first impressions of the spec, scoping the work.
-2. **[Transaction Parsing](./transaction-parsing)** — RLP decoding, type registration, field validation.
+2. **[Transaction Parsing](./transaction-parsing)** — RLP decoding, type registration, field validation, and the major `TransactionInterface` friction story.
 3. **[EVM Integration](./evm-integration)** — Opcode implementation, frame execution loop, approval state management.
 
 New entries will be added as the implementation progresses. Topics may include:
