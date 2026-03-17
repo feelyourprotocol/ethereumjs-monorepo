@@ -14,6 +14,7 @@ import type { FeeMarket1559Tx } from './1559/tx.ts'
 import type { AccessList2930Tx } from './2930/tx.ts'
 import type { Blob4844Tx } from './4844/tx.ts'
 import type { EOACode7702Tx } from './7702/tx.ts'
+import type { FrameBytes, FrameEIP8141Tx } from './8141/tx.ts'
 import type { LegacyTx } from './legacy/tx.ts'
 export type Capability = (typeof Capability)[keyof typeof Capability]
 
@@ -51,6 +52,12 @@ export const Capability = {
    * See [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702)
    */
   EIP7702EOACode: 7702,
+
+  /**
+   * Tx supports EIP-8141 frame transactions
+   * See [EIP-8141](https://eips.ethereum.org/EIPS/eip-8141)
+   */
+  EIP8141FrameTx: 8141,
 }
 
 /**
@@ -151,6 +158,7 @@ export const TransactionType = {
   FeeMarketEIP1559: 2,
   BlobEIP4844: 3,
   EOACodeEIP7702: 4,
+  FrameEIP8141: 6,
 } as const
 
 export interface Transaction {
@@ -159,6 +167,7 @@ export interface Transaction {
   [TransactionType.AccessListEIP2930]: AccessList2930Tx
   [TransactionType.BlobEIP4844]: Blob4844Tx
   [TransactionType.EOACodeEIP7702]: EOACode7702Tx
+  [TransactionType.FrameEIP8141]: FrameEIP8141Tx
 }
 
 export type TypedTransaction = Transaction[TransactionType]
@@ -206,6 +215,15 @@ export function isBlob4844Tx(tx: TypedTransaction): tx is Blob4844Tx {
  */
 export function isEOACode7702Tx(tx: TypedTransaction): tx is EOACode7702Tx {
   return tx.type === TransactionType.EOACodeEIP7702
+}
+
+/**
+ * Type guard to check if transaction is a Frame EIP-8141 transaction
+ * @param tx - The transaction to check
+ * @returns true if transaction is Frame EIP-8141 type
+ */
+export function isFrameEIP8141Tx(tx: TypedTransaction): tx is FrameEIP8141Tx {
+  return tx.type === TransactionType.FrameEIP8141
 }
 
 export interface TransactionInterface<T extends TransactionType = TransactionType> {
@@ -287,12 +305,31 @@ export interface EIP7702CompatibleTx<T extends TransactionType = TransactionType
   readonly authorizationList: EOACode7702AuthorizationListBytes
 }
 
+/**
+ * EIP-8141 compatible transaction interface.
+ *
+ * Note: This extends EIP2718CompatibleTx directly (NOT EIP2930/EIP1559)
+ * because Frame TX has no access list. It includes EIP-1559 fee fields
+ * and EIP-4844 blob fields directly.
+ */
+export interface EIP8141CompatibleTx<T extends TransactionType = TransactionType>
+  extends EIP2718CompatibleTx<T> {
+  readonly sender: Address
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly frames: any[]
+  readonly maxPriorityFeePerGas: bigint
+  readonly maxFeePerGas: bigint
+  readonly maxFeePerBlobGas: bigint
+  readonly blobVersionedHashes: Uint8Array[]
+}
+
 export interface TxData {
   [TransactionType.Legacy]: LegacyTxData
   [TransactionType.AccessListEIP2930]: AccessList2930TxData
   [TransactionType.FeeMarketEIP1559]: FeeMarketEIP1559TxData
   [TransactionType.BlobEIP4844]: BlobEIP4844TxData
   [TransactionType.EOACodeEIP7702]: EOACode7702TxData
+  [TransactionType.FrameEIP8141]: FrameEIP8141TxData
 }
 
 export type TypedTxData = TxData[TransactionType]
@@ -345,6 +382,16 @@ export function isBlob4844TxData(txData: TypedTxData): txData is BlobEIP4844TxDa
 export function isEOACode7702TxData(txData: TypedTxData): txData is EOACode7702TxData {
   const txType = Number(bytesToBigInt(toBytes(txData.type)))
   return txType === TransactionType.EOACodeEIP7702
+}
+
+/**
+ * Type guard to check if transaction data is Frame EIP-8141 transaction data
+ * @param txData - The transaction data to check
+ * @returns true if transaction data is Frame EIP-8141 type
+ */
+export function isFrameEIP8141TxData(txData: TypedTxData): txData is FrameEIP8141TxData {
+  const txType = Number(bytesToBigInt(toBytes(txData.type)))
+  return txType === TransactionType.FrameEIP8141
 }
 
 /**
@@ -478,12 +525,44 @@ export interface EOACode7702TxData extends FeeMarketEIP1559TxData {
   authorizationList?: EOACode7702AuthorizationListBytes | EOACode7702AuthorizationList | never
 }
 
+/**
+ * {@link FrameEIP8141Tx} data.
+ *
+ * Note: Frame TX breaks the standard TxData inheritance chain because it has
+ * no top-level `to`, `value`, `data`, `gasPrice`, `accessList`, or signature
+ * fields. The `sender` is explicit (not signature-derived) and `frames`
+ * replace the traditional call target/value/data.
+ */
+export interface FrameEIP8141TxData {
+  type?: BigIntLike
+  chainId?: BigIntLike
+  nonce?: BigIntLike
+  sender?: AddressLike
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  frames?: FrameBytes[] | any[]
+  maxPriorityFeePerGas?: BigIntLike
+  maxFeePerGas?: BigIntLike
+  maxFeePerBlobGas?: BigIntLike
+  blobVersionedHashes?: BytesLike[]
+
+  // Base interface fields — present for TxData union compatibility but
+  // not meaningful for Frame TX (no top-level target/value/data/signature).
+  gasLimit?: BigIntLike
+  to?: AddressLike | ''
+  value?: BigIntLike
+  data?: BytesLike | ''
+  v?: BigIntLike
+  r?: BigIntLike
+  s?: BigIntLike
+}
+
 export interface TxValuesArray {
   [TransactionType.Legacy]: LegacyTxValuesArray
   [TransactionType.AccessListEIP2930]: AccessList2930TxValuesArray
   [TransactionType.FeeMarketEIP1559]: FeeMarketEIP1559TxValuesArray
   [TransactionType.BlobEIP4844]: BlobEIP4844TxValuesArray
   [TransactionType.EOACodeEIP7702]: EOACode7702TxValuesArray
+  [TransactionType.FrameEIP8141]: FrameEIP8141TxValuesArray
 }
 
 /**
@@ -563,6 +642,21 @@ type BlobEIP4844TxValuesArray = [
   Uint8Array?,
   Uint8Array?,
   Uint8Array?,
+]
+
+/**
+ * Bytes values array for a {@link FrameEIP8141Tx}
+ * Format: [chain_id, nonce, sender, frames, max_priority_fee_per_gas, max_fee_per_gas, max_fee_per_blob_gas, blob_versioned_hashes]
+ */
+type FrameEIP8141TxValuesArray = [
+  Uint8Array,
+  Uint8Array,
+  Uint8Array,
+  FrameBytes[],
+  Uint8Array,
+  Uint8Array,
+  Uint8Array,
+  Uint8Array[],
 ]
 
 export type BlobEIP4844NetworkValuesArray = [
