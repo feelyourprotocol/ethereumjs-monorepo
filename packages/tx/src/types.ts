@@ -315,7 +315,7 @@ export interface EIP7702CompatibleTx<T extends TransactionType = TransactionType
 export interface EIP8141CompatibleTx<T extends TransactionType = TransactionType>
   extends EIP2718CompatibleTx<T> {
   readonly sender: Address
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   readonly frames: any[]
   readonly maxPriorityFeePerGas: bigint
   readonly maxFeePerGas: bigint
@@ -538,7 +538,7 @@ export interface FrameEIP8141TxData {
   chainId?: BigIntLike
   nonce?: BigIntLike
   sender?: AddressLike
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   frames?: FrameBytes[] | any[]
   maxPriorityFeePerGas?: BigIntLike
   maxFeePerGas?: BigIntLike
