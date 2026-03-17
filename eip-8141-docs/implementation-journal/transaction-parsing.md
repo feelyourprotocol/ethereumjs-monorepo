@@ -1,49 +1,96 @@
 # Transaction Parsing
 
-*Status: Not yet started — this page outlines the planned approach and open questions.*
+*March 17, 2026 — First implementation day*
 
-## Overview
+::: danger 🤖 AI-Generated Content
+This documentation is AI-generated and updated frequently. See the [home page](/) for the full disclaimer.
+:::
 
-The first concrete implementation task is adding the `FrameTransaction` type to `@ethereumjs/tx`. This involves:
+## What We Built
 
-1. Defining the RLP schema for encoding and decoding
-2. Registering the new type (`0x06`) in the transaction type registry
-3. Implementing field validation (static constraints)
-4. Computing the signature hash with `VERIFY` frame data elision
-5. Generating the new receipt format
+In this session we scaffolded the complete `FrameEIP8141Tx` transaction type in `@ethereumjs/tx`, following the structure of existing types (EIP-7702 as primary reference). The scope:
 
-## Planned Approach
+- **Common**: Added EIP-8141 to the EIP registry (`eips.ts`) with `minimumHardfork: Prague` and `requiredEIPs: [2718, 4844]`.
+- **Params**: Registered `frameTxIntrinsicCost: 15000` and `maxFrames: 1000`.
+- **Types**: Added `TransactionType.FrameEIP8141 = 6`, type guards, `FrameEIP8141TxData`, `FrameEIP8141TxValuesArray`, `EIP8141CompatibleTx`, and `Capability.EIP8141FrameTx`.
+- **Tx class** (`src/8141/tx.ts`): Full implementation of `FrameEIP8141Tx` implementing `TransactionInterface`, with computed `gasLimit`, explicit `sender`, signature hash with VERIFY data elision, and all required interface methods.
+- **Constructors** (`src/8141/constructors.ts`): `createFrameEIP8141Tx`, `createFrameEIP8141TxFromBytesArray`, `createFrameEIP8141TxFromRLP`.
+- **Capabilities** (`src/capabilities/eip8141.ts`): Frame validation, calldata gas computation, intrinsic gas, and gas limit calculation.
+- **Factory**: Integrated into `createTx()` and `createTxFromRLP()`.
+- **Tests**: 39 tests across two suites — shared generic behavior and EIP-8141-unique behavior.
 
-The EthereumJS tx library has a well-established pattern for adding new transaction types, most recently with EIP-4844 blob transactions and EIP-7702 set-code transactions. We will follow this pattern, extending the base transaction class.
+## The Big Story: TransactionInterface Friction
 
-### Key differences from existing types:
+The single most impactful finding from this initial scaffolding is how poorly EIP-8141 fits the existing `TransactionInterface` abstraction. Every previous Ethereum transaction type (Legacy through EIP-7702) shares a common shape:
 
-- **Explicit sender** — unlike all other types, the sender is a field, not derived from a signature
-- **No top-level signature** — the signature lives inside frame data
-- **Frames array** — a nested RLP structure that needs its own encoding/decoding logic
-- **No `to` field** — replaced by per-frame `target`
-- **No `value` field** — transfers are done through frame execution
-- **No `accessList`** — intentionally omitted per the spec rationale
+```
+[nonce, gasLimit, to, value, data, ..., v, r, s]
+```
 
-## Open Questions
+EIP-8141 breaks **all** of these assumptions:
 
-These are questions we expect to encounter during implementation:
+| Field | Previous TXs | EIP-8141 |
+|-------|-------------|----------|
+| `to` | Top-level address | Doesn't exist (per-frame targets) |
+| `value` | Top-level ETH amount | Doesn't exist (no built-in value transfer) |
+| `data` | Top-level calldata | Doesn't exist (per-frame data) |
+| `gasLimit` | Explicit field | Computed from frames |
+| `v`, `r`, `s` | ECDSA signature | Don't exist (VERIFY frame validation) |
+| `sender` | Derived from signature | Explicit 20-byte field |
 
-### RLP Encoding Details
+### Concrete Problems
 
-- How exactly should a null `target` be encoded in RLP? As an empty byte string `0x80`? The spec says "target is None" but doesn't specify the RLP representation explicitly.
-- What is the RLP encoding of the `mode` field when it includes approval bits? Is it encoded as a full uint256, or should it be a minimal-length integer?
+**1. `sharedConstructor` is unusable.** The shared constructor (`util/internal.ts`) destructures `{ nonce, gasLimit, to, value, data, v, r, s }` from `TxData` — six of these eight fields don't exist in `FrameEIP8141TxData`. We had to skip it entirely and write custom initialization, duplicating the Common setup and parameter loading logic.
 
-### Validation Scope
+**2. The `TxData` union breaks.** Adding `FrameEIP8141TxData` to the `TxData[TransactionType]` union caused TypeScript errors in `sharedConstructor` because the union members no longer share `gasLimit`, `to`, `value`, `data`, `v`, `r`, `s`. We had to add these as unused optional fields to `FrameEIP8141TxData` — pure noise to satisfy the type system.
 
-- Should we validate frame mode approval bits at the parsing stage, or defer to execution time?
-- How much validation belongs in the transaction class vs. the VM execution logic?
+**3. Interface methods that must throw.** The `TransactionInterface` mandates `sign()`, `addSignature()`, `getSenderPublicKey()`, and `verifySignature()`. For Frame TX, all of these throw at runtime — there is no ECDSA signature to produce or verify. This is a runtime trap for any code that calls these methods on a generic `TypedTransaction`.
 
-### Signature Hash
+**4. Capability chain doesn't fit.** The interface inheritance chain is linear: `TransactionInterface` → `EIP2718CompatibleTx` → `EIP2930CompatibleTx` → `EIP1559CompatibleTx`. Frame TX uses EIP-1559 fees but explicitly does NOT use EIP-2930 access lists (the EIP rationale explains why). We had to create `EIP8141CompatibleTx` extending `EIP2718CompatibleTx` directly, breaking the assumption that EIP-1559 fees imply access lists.
 
-- The signature hash elides `VERIFY` frame data. But what about a `VERIFY` frame where `mode` also has approval bits set — do we use `mode & 0xFF` to identify `VERIFY`, or the full `mode` value?
-- The spec says `tx.frames[i].data = Bytes()` for signature hash computation. Does this mean the `data` field becomes an empty RLP string, or is the entire frame field structure preserved with just the data emptied?
+### Potential Mitigations
 
-## Notes
+If the EthereumJS `TransactionInterface` were to evolve, a cleaner approach might be:
 
-*This page will be updated as implementation progresses with answers to the questions above, implementation decisions made, and any surprises encountered.*
+- **Split the interface**: Separate `SignableTransaction` (with `sign`, `addSignature`, `v/r/s`) from a base `Transaction` (with serialization, hashing, validation).
+- **Make base fields optional**: `to`, `value`, `data` could be optional on the base interface since Frame TX proves they're not universal.
+- **Compose capabilities**: Instead of a linear inheritance chain, use composition — a tx could declare its capabilities as a set, and the interface would only require methods matching active capabilities.
+
+These are non-trivial refactors. For now, our approach of implementing the full interface with throwing stubs is pragmatic and keeps the factory and generic transaction handling working.
+
+## Computed Gas Limit
+
+Unlike all other tx types where `gasLimit` is an explicit field, EIP-8141 computes it:
+
+```
+tx_gas_limit = FRAME_TX_INTRINSIC_COST + calldata_cost(rlp(frames)) + sum(frame.gas_limit)
+```
+
+We compute this in the constructor and store it as a readonly property, satisfying the interface while being spec-compliant. One subtle implication: `gasLimit` is not part of the RLP payload, so it doesn't round-trip through serialization. After deserializing, we recompute it — this is a difference from other tx types where `gasLimit` is preserved byte-for-byte in the RLP.
+
+## Signature Hash (VERIFY Data Elision)
+
+The EIP-8141 signature hash zeroes out `frame.data` for all VERIFY frames before hashing. Our test suite verifies this property directly:
+
+- Changing VERIFY frame data does **not** change the signature hash
+- Changing SENDER frame data **does** change the signature hash
+
+This is correct per spec and elegant for the gas-sponsoring use case (the sponsor's data can be attached after the sender signs).
+
+## Frame Validation (Black Box for Now)
+
+We intentionally treat frames as a structural black box at the tx layer. Validation is limited to:
+
+- Frame count: `1 <= len(frames) <= MAX_FRAMES (1000)`
+- Mode validity: `mode & 0xFF` must be 0, 1, or 2
+- Target length: 0 (null → sender) or 20 bytes
+
+Semantic validation (does a VERIFY frame actually call APPROVE? Is `sender_approved` set before SENDER frames?) happens during EVM execution, not at the transaction layer.
+
+## What's Next
+
+- Flesh out frame types beyond the `FrameBytes` black box
+- Implement the frame execution loop in `@ethereumjs/evm`
+- Add the four new opcodes (APPROVE, TXPARAM, FRAMEDATALOAD, FRAMEDATACOPY)
+- Implement the default code for EOA support
+- Receipt generation with per-frame status
