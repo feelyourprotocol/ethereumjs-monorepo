@@ -19,6 +19,7 @@ import { getCommon, valueOverflowCheck } from '../util/internal.ts'
 import type { Common } from '@ethereumjs/common'
 import type {
   Capability,
+  FrameEIP8141TxData,
   JSONTx,
   TransactionCache,
   TransactionInterface,
@@ -34,8 +35,6 @@ import type {
  * - data: calldata for the frame
  */
 export type FrameBytes = [Uint8Array, Uint8Array, Uint8Array, Uint8Array]
-
-import type { FrameEIP8141TxData } from '../types.ts'
 
 export type TxData = FrameEIP8141TxData
 
