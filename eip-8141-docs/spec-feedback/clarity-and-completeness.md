@@ -48,6 +48,30 @@ The `mode` field uses bits 0-7 for the execution mode and bits 9-10 for approval
 
 The new receipt format `[cumulative_gas_used, payer, [frame_receipt, ...]]` differs from the standard receipt format. How does this interact with existing tooling (block explorers, indexers, RPC methods like `eth_getTransactionReceipt`)? Should there be guidance on JSON-RPC representation?
 
+### accessList Assumption in Existing Client Code
+
+**Type: Suggestion** — *Added March 17, 2026 after EVM/VM vertical integration*
+
+Existing Ethereum client code universally assumes that all EIP-2718 typed transactions have an `accessList` field (since EIP-2930 was the first typed transaction). The EIP-8141 Frame Transaction is the first typed transaction to NOT have an access list. In EthereumJS, this caused a runtime error deep in `runTx()` where the access list is iterated for pre-warming.
+
+**Observation for spec authors:** Worth explicitly calling out in the "Backwards Compatibility" section that Frame TX does not include `accessList`, and that client code which assumes all typed transactions have one will need guards. This is a broader pattern: many client implementations have implicit assumptions about the "typed transaction shape" that go beyond the formal `TransactionInterface`.
+
+### Default Code as Non-EVM Execution
+
+**Type: Suggestion** — *Added March 17, 2026 after implementing default code*
+
+The default code for EOAs (VERIFY and SENDER modes) is described in the spec as pseudocode. In practice, implementing this as EVM bytecode would be very complex (VERIFY needs ecrecover, SENDER needs RLP decoding). We implemented it as native TypeScript code that directly manipulates state, bypassing the EVM interpreter entirely.
+
+**Observation:** This means default code execution has different observability characteristics than contract code — no EVM trace, no step events, no gas metering at the opcode level. The spec might benefit from acknowledging that default code is expected to be implemented natively rather than as EVM bytecode, and noting the implications for debugging and tracing tools.
+
+### Dual APPROVE Implementation Requirement
+
+**Type: Gap** — *Added March 17, 2026 after implementing APPROVE in both EVM and VM*
+
+APPROVE must exist in two forms: as an EVM opcode (for smart account contracts) and as a native function (for default code). Both must produce identical state effects. The spec only describes APPROVE once, in the opcode section. Implementers need to maintain two synchronized implementations with identical semantics — any drift between them would be a consensus bug.
+
+**Suggestion:** Add a note that default code implementations must replicate APPROVE semantics exactly, or provide a clearer separation between "APPROVE as opcode" and "APPROVE as abstract operation."
+
 ## Opcodes
 
 ### TXPARAM Parameter Numbering
