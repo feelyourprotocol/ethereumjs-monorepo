@@ -1,9 +1,10 @@
 import { Common, Hardfork, Mainnet } from '@ethereumjs/common'
+import { type FrameEIP8141TxData, createFrameEIP8141Tx } from '@ethereumjs/tx'
 import {
   Account,
   Address,
   BIGINT_0,
-  BIGINT_1,
+  bigIntToUnpaddedBytes,
   bytesToBigInt,
   equalsBytes,
   hexToBytes,
@@ -11,9 +12,10 @@ import {
 import { assert, describe, it } from 'vitest'
 
 import {
-  ENTRY_POINT_ADDRESS,
   FRAME_MODE,
-  type FrameTransactionContext,
+  type FrameExecutionContext,
+  type FrameExecutionState,
+  type ParsedFrame,
   createEVM,
 } from '../../src/index.ts'
 
@@ -21,37 +23,64 @@ function createCommonWith8141(): Common {
   return new Common({ chain: Mainnet, hardfork: Hardfork.Prague, eips: [8141] })
 }
 
+/**
+ * Helper: build a FrameExecutionContext from a real tx + state overrides.
+ */
 function createFrameContext(
-  overrides: Partial<FrameTransactionContext> = {},
-): FrameTransactionContext {
-  const sender = new Address(hexToBytes('0x' + 'aa'.repeat(20)))
-  return {
-    txType: 6,
+  common: Common,
+  overrides: {
+    senderHex?: string
+    nonce?: bigint
+    frames?: [number, string | null, bigint, Uint8Array][]
+    currentFrameIndex?: number
+    senderApproved?: boolean
+    payerApproved?: boolean
+    totalGasCost?: bigint
+  } = {},
+): FrameExecutionContext {
+  const senderHex = overrides.senderHex ?? '0x' + 'aa'.repeat(20)
+  const nonce = overrides.nonce ?? 0n
+
+  const rawFrames: [Uint8Array, Uint8Array, Uint8Array, Uint8Array][] = (
+    overrides.frames ?? [[FRAME_MODE.VERIFY, null, 100000n, new Uint8Array(0)]]
+  ).map(([mode, target, gasLimit, data]) => [
+    new Uint8Array([mode]),
+    target !== null ? hexToBytes(target as `0x${string}`) : new Uint8Array(0),
+    bigIntToUnpaddedBytes(gasLimit),
+    data,
+  ])
+
+  const txData: FrameEIP8141TxData = {
     chainId: 1n,
-    nonce: 0n,
-    sender,
+    nonce,
+    sender: senderHex as `0x${string}`,
     maxPriorityFeePerGas: 1n,
     maxFeePerGas: 10n,
     maxFeePerBlobGas: 0n,
-    blobVersionedHashes: [],
-    sigHash: new Uint8Array(32),
-    frames: [
-      {
-        mode: FRAME_MODE.VERIFY,
-        target: sender,
-        gasLimit: 100000n,
-        data: new Uint8Array(0),
-      },
-    ],
-    currentFrameIndex: 0,
-    senderApproved: false,
-    payerApproved: false,
+    frames: rawFrames,
+  }
+
+  const tx = createFrameEIP8141Tx(txData, { common })
+
+  const parsedFrames: ParsedFrame[] = rawFrames.map(([modeBytes, targetBytes, gasBytes, data]) => ({
+    mode: modeBytes[0],
+    target: targetBytes.length === 0 ? null : new Address(targetBytes),
+    gasLimit: gasBytes.length === 0 ? BIGINT_0 : bytesToBigInt(gasBytes),
+    data,
+  }))
+
+  const state: FrameExecutionState = {
+    parsedFrames,
+    currentFrameIndex: overrides.currentFrameIndex ?? 0,
+    senderApproved: overrides.senderApproved ?? false,
+    payerApproved: overrides.payerApproved ?? false,
     approveCalledInCurrentFrame: false,
     frameResults: [],
-    totalGasCost: 1000000n,
+    totalGasCost: overrides.totalGasCost ?? 1000000n,
     totalBlobGasCost: 0n,
-    ...overrides,
   }
+
+  return { tx, state }
 }
 
 describe('EIP-8141: Opcode Registration', () => {
@@ -88,73 +117,66 @@ describe('EIP-8141: TXPARAM opcode', () => {
   it('should return tx type (param 0x00)', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
-    const ctx = createFrameContext()
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = createFrameContext(common)
 
-    // PUSH1 0x00 (in2), PUSH1 0x00 (param), TXPARAM
     const code = hexToBytes('0x60006000b0')
     const result = await evm.runCode!({ code, gasLimit: 100000n })
 
     assert.isUndefined(result.exceptionError)
     assert.equal(result.runState!.stack.length, 1)
     assert.equal(result.runState!.stack.pop(), 6n)
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   })
 
   it('should return nonce (param 0x01)', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
-    const ctx = createFrameContext({ nonce: 42n })
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = createFrameContext(common, { nonce: 42n })
 
     const code = hexToBytes('0x60006001b0')
     const result = await evm.runCode!({ code, gasLimit: 100000n })
 
     assert.isUndefined(result.exceptionError)
     assert.equal(result.runState!.stack.pop(), 42n)
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   })
 
   it('should return current frame index (param 0x10)', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
-    const ctx = createFrameContext({ currentFrameIndex: 3 })
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = createFrameContext(common, { currentFrameIndex: 3 })
 
     const code = hexToBytes('0x60006010b0')
     const result = await evm.runCode!({ code, gasLimit: 100000n })
 
     assert.isUndefined(result.exceptionError)
     assert.equal(result.runState!.stack.pop(), 3n)
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   })
 
   it('should return frame count (param 0x09)', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
-    const ctx = createFrameContext()
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = createFrameContext(common)
 
     const code = hexToBytes('0x60006009b0')
     const result = await evm.runCode!({ code, gasLimit: 100000n })
 
     assert.isUndefined(result.exceptionError)
     assert.equal(result.runState!.stack.pop(), 1n)
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   })
 
   it('should halt on invalid param', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
-    const ctx = createFrameContext()
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = createFrameContext(common)
 
-    // Invalid param 0xFF
     const code = hexToBytes('0x600060ffb0')
     const result = await evm.runCode!({ code, gasLimit: 100000n })
 
     assert.isDefined(result.exceptionError)
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   })
 
   it('should halt when no frame context is set', async () => {
@@ -173,117 +195,97 @@ describe('EIP-8141: APPROVE opcode', () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
 
-    const senderAddr = new Address(hexToBytes('0x' + 'bb'.repeat(20)))
+    const senderHex = '0x' + 'bb'.repeat(20)
+    const senderAddr = new Address(hexToBytes(senderHex as `0x${string}`))
     const senderAccount = new Account(0n, 10000000n)
     await evm.stateManager.putAccount(senderAddr, senderAccount)
 
-    const ctx = createFrameContext({
-      sender: senderAddr,
-      frames: [
-        {
-          mode: FRAME_MODE.VERIFY,
-          target: senderAddr,
-          gasLimit: 100000n,
-          data: new Uint8Array(0),
-        },
-      ],
+    const fctx = createFrameContext(common, {
+      senderHex,
+      frames: [[FRAME_MODE.VERIFY, null, 100000n, new Uint8Array(0)]],
       totalGasCost: 500000n,
     })
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = fctx
 
-    // PUSH1 0x02 (scope), APPROVE
     const code = hexToBytes('0x6002aa')
-    const result = await evm.runCall({
+    await evm.runCall({
       to: senderAddr,
-      caller: new Address(hexToBytes('0x' + '00'.repeat(19) + 'aa')),
+      caller: new Address(hexToBytes(('0x' + '00'.repeat(19) + 'aa') as `0x${string}`)),
       gasLimit: 100000n,
       data: new Uint8Array(0),
       code,
     })
 
-    assert.isTrue(ctx.senderApproved)
-    assert.isTrue(ctx.payerApproved)
-    assert.isTrue(ctx.approveCalledInCurrentFrame)
-    assert.isTrue(equalsBytes(ctx.payer!.bytes, senderAddr.bytes))
+    assert.isTrue(fctx.state.senderApproved)
+    assert.isTrue(fctx.state.payerApproved)
+    assert.isTrue(fctx.state.approveCalledInCurrentFrame)
+    assert.isTrue(equalsBytes(fctx.state.payer!.bytes, senderAddr.bytes))
 
     const updatedAccount = await evm.stateManager.getAccount(senderAddr)
     assert.equal(updatedAccount!.nonce, 1n)
     assert.equal(updatedAccount!.balance, 10000000n - 500000n)
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   })
 
   it('should revert if ADDRESS != frame.target', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
 
-    const senderAddr = new Address(hexToBytes('0x' + 'bb'.repeat(20)))
-    const wrongAddr = new Address(hexToBytes('0x' + 'cc'.repeat(20)))
+    const senderHex = '0x' + 'bb'.repeat(20)
+    const wrongAddr = new Address(hexToBytes(('0x' + 'cc'.repeat(20)) as `0x${string}`))
     await evm.stateManager.putAccount(wrongAddr, new Account(0n, 10000000n))
 
-    const ctx = createFrameContext({
-      sender: senderAddr,
-      frames: [
-        {
-          mode: FRAME_MODE.VERIFY,
-          target: senderAddr,
-          gasLimit: 100000n,
-          data: new Uint8Array(0),
-        },
-      ],
+    const fctx = createFrameContext(common, {
+      senderHex,
+      frames: [[FRAME_MODE.VERIFY, null, 100000n, new Uint8Array(0)]],
     })
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = fctx
 
     const code = hexToBytes('0x6002aa')
-    const result = await evm.runCall({
+    await evm.runCall({
       to: wrongAddr,
-      caller: new Address(hexToBytes('0x' + '00'.repeat(19) + 'aa')),
+      caller: new Address(hexToBytes(('0x' + '00'.repeat(19) + 'aa') as `0x${string}`)),
       gasLimit: 100000n,
       code,
     })
 
-    assert.isFalse(ctx.senderApproved)
-    assert.isFalse(ctx.payerApproved)
-    ;(evm as any).frameTransactionContext = undefined
+    assert.isFalse(fctx.state.senderApproved)
+    assert.isFalse(fctx.state.payerApproved)
+    evm.frameExecutionContext = undefined
   })
 
   it('should revert if insufficient balance', async () => {
     const common = createCommonWith8141()
     const evm = await createEVM({ common })
 
-    const senderAddr = new Address(hexToBytes('0x' + 'bb'.repeat(20)))
+    const senderHex = '0x' + 'bb'.repeat(20)
+    const senderAddr = new Address(hexToBytes(senderHex as `0x${string}`))
     await evm.stateManager.putAccount(senderAddr, new Account(0n, 100n))
 
-    const ctx = createFrameContext({
-      sender: senderAddr,
-      frames: [
-        {
-          mode: FRAME_MODE.VERIFY,
-          target: senderAddr,
-          gasLimit: 100000n,
-          data: new Uint8Array(0),
-        },
-      ],
+    const fctx = createFrameContext(common, {
+      senderHex,
+      frames: [[FRAME_MODE.VERIFY, null, 100000n, new Uint8Array(0)]],
       totalGasCost: 500000n,
     })
-    ;(evm as any).frameTransactionContext = ctx
+    evm.frameExecutionContext = fctx
 
     const code = hexToBytes('0x6002aa')
-    const result = await evm.runCall({
+    await evm.runCall({
       to: senderAddr,
-      caller: new Address(hexToBytes('0x' + '00'.repeat(19) + 'aa')),
+      caller: new Address(hexToBytes(('0x' + '00'.repeat(19) + 'aa') as `0x${string}`)),
       gasLimit: 100000n,
       code,
     })
 
-    assert.isFalse(ctx.senderApproved)
-    assert.isFalse(ctx.payerApproved)
-    ;(evm as any).frameTransactionContext = undefined
+    assert.isFalse(fctx.state.senderApproved)
+    assert.isFalse(fctx.state.payerApproved)
+    evm.frameExecutionContext = undefined
   })
 })
 
-describe('EIP-8141: FrameTransactionContext isolation', () => {
-  it('EVM should have no frameTransactionContext by default', async () => {
+describe('EIP-8141: FrameExecutionContext isolation', () => {
+  it('EVM should have no frameExecutionContext by default', async () => {
     const evm = await createEVM()
-    assert.isUndefined((evm as any).frameTransactionContext)
+    assert.isUndefined(evm.frameExecutionContext)
   })
 })

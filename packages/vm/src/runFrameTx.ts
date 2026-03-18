@@ -2,17 +2,11 @@
  * EIP-8141 Frame Transaction Execution
  *
  * Implements the frame execution loop and default code for EOA accounts.
- * This module bridges @ethereumjs/tx (FrameEIP8141Tx) and @ethereumjs/evm
- * (FrameTransactionContext), keeping the EVM standalone and tx-agnostic.
+ * The EVM holds a FrameExecutionContext = { tx, state } during execution.
  */
 
-import {
-  ENTRY_POINT_ADDRESS,
-  FRAME_MODE,
-  type FrameData,
-  type FrameResult,
-  type FrameTransactionContext,
-} from '@ethereumjs/evm'
+import { ENTRY_POINT_ADDRESS, FRAME_MODE } from '@ethereumjs/evm'
+import type { ExecResult, FrameExecutionState, FrameResult, ParsedFrame } from '@ethereumjs/evm'
 import { RLP } from '@ethereumjs/rlp'
 import type { FrameBytes, FrameEIP8141Tx } from '@ethereumjs/tx'
 import {
@@ -22,17 +16,16 @@ import {
   BIGINT_1,
   EthereumJSErrorWithoutCode,
   bytesToBigInt,
+  bytesToHex,
   concatBytes,
-  createAddressFromString,
   ecrecover,
   equalsBytes,
   hexToBytes,
   publicToAddress,
 } from '@ethereumjs/util'
-import { keccak256 } from 'ethereum-cryptography/keccak.js'
+import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import type { Block } from '@ethereumjs/block'
-import type { EVMResult, ExecResult } from '@ethereumjs/evm'
 import type { RunTxOpts, RunTxResult } from './types.ts'
 import type { VM } from './vm.ts'
 
@@ -40,9 +33,23 @@ const ECRECOVER_GAS = BigInt(3000)
 const DEFAULT_CODE_OVERHEAD = BigInt(100)
 
 /**
+ * Parse raw FrameBytes from the tx into ParsedFrame objects.
+ */
+function parseFrames(tx: FrameEIP8141Tx): ParsedFrame[] {
+  return tx.frames.map((f: FrameBytes) => {
+    const modeVal = f[0].length === 0 ? 0 : Number(bytesToBigInt(f[0]))
+    return {
+      mode: modeVal & 0xff,
+      target: f[1].length === 0 ? null : new Address(f[1]),
+      gasLimit: f[2].length === 0 ? BIGINT_0 : bytesToBigInt(f[2]),
+      data: f[3],
+    }
+  })
+}
+
+/**
  * Execute an EIP-8141 frame transaction through the frame execution loop.
  *
- * This replaces the standard single `evm.runCall()` path for frame transactions.
  * Gas cost deduction and nonce increment are handled by APPROVE (or the default
  * code equivalent), not by the VM upfront.
  */
@@ -57,34 +64,16 @@ export async function runFrameTransaction(
 ): Promise<RunTxResult> {
   const evm = vm.evm
   const caller = tx.getSenderAddress()
+  const parsedFrames = parseFrames(tx)
 
-  const frames: FrameData[] = (tx as any).frames.map((f: FrameBytes) => {
-    const modeVal = f[0].length === 0 ? 0 : Number(bytesToBigInt(f[0]))
-    return {
-      mode: modeVal & 0xff,
-      target: f[1].length === 0 ? null : new Address(f[1]),
-      gasLimit: f[2].length === 0 ? BIGINT_0 : bytesToBigInt(f[2]),
-      data: f[3],
-    }
-  })
-
-  const blobCount = (tx as any).blobVersionedHashes?.length ?? 0
+  const blobCount = tx.blobVersionedHashes.length
   const blobGasPerBlob = blobCount > 0 ? vm.common.param('blobGasPerBlob') : BIGINT_0
   const totalBlobGas = blobGasPerBlob * BigInt(blobCount)
   const totalGasCost = tx.gasLimit * gasPrice
   const totalBlobGasCost = totalBlobGas * blobGasPrice
 
-  const ctx: FrameTransactionContext = {
-    txType: 6,
-    chainId: (tx as any).chainId,
-    nonce: tx.nonce,
-    sender: caller,
-    maxPriorityFeePerGas: (tx as any).maxPriorityFeePerGas,
-    maxFeePerGas: (tx as any).maxFeePerGas,
-    maxFeePerBlobGas: (tx as any).maxFeePerBlobGas ?? BIGINT_0,
-    blobVersionedHashes: (tx as any).blobVersionedHashes ?? [],
-    sigHash: tx.getHashedMessageToSign(),
-    frames,
+  const state: FrameExecutionState = {
+    parsedFrames,
     currentFrameIndex: 0,
     senderApproved: false,
     payerApproved: false,
@@ -93,7 +82,8 @@ export async function runFrameTransaction(
     totalGasCost,
     totalBlobGasCost,
   }
-  ;(evm as any).frameTransactionContext = ctx
+
+  evm.frameExecutionContext = { tx, state }
 
   let totalFrameGasUsed = BIGINT_0
   const entryPoint = new Address(hexToBytes(ENTRY_POINT_ADDRESS))
@@ -102,12 +92,12 @@ export async function runFrameTransaction(
   let invalidReason = ''
 
   try {
-    for (let i = 0; i < frames.length; i++) {
-      ctx.currentFrameIndex = i
-      ctx.approveCalledInCurrentFrame = false
-      const frame = frames[i]
+    for (let i = 0; i < parsedFrames.length; i++) {
+      state.currentFrameIndex = i
+      state.approveCalledInCurrentFrame = false
+      const frame = parsedFrames[i]
 
-      if (frame.mode === FRAME_MODE.SENDER && !ctx.senderApproved) {
+      if (frame.mode === FRAME_MODE.SENDER && !state.senderApproved) {
         txInvalid = true
         invalidReason = 'SENDER frame executed before sender_approved'
         break
@@ -124,7 +114,8 @@ export async function runFrameTransaction(
       if (!hasCode) {
         frameResult = await runDefaultCode(
           vm,
-          ctx,
+          tx,
+          state,
           frame,
           frameCaller,
           frameTarget,
@@ -141,7 +132,7 @@ export async function runFrameTransaction(
           value: BIGINT_0,
           data: frame.data,
           origin: frameCaller,
-          blobVersionedHashes: ctx.blobVersionedHashes,
+          blobVersionedHashes: tx.blobVersionedHashes.map(bytesToHex),
         })
 
         const reverted = result.execResult.exceptionError !== undefined
@@ -155,22 +146,22 @@ export async function runFrameTransaction(
         }
       }
 
-      ctx.frameResults.push(frameResult)
+      state.frameResults.push(frameResult)
       totalFrameGasUsed += frameResult.gasUsed
 
-      if (frame.mode === FRAME_MODE.VERIFY && !ctx.approveCalledInCurrentFrame) {
+      if (frame.mode === FRAME_MODE.VERIFY && !state.approveCalledInCurrentFrame) {
         txInvalid = true
         invalidReason = 'VERIFY frame did not call APPROVE'
         break
       }
     }
 
-    if (!txInvalid && !ctx.payerApproved) {
+    if (!txInvalid && !state.payerApproved) {
       txInvalid = true
       invalidReason = 'payer_approved not set after executing all frames'
     }
   } finally {
-    ;(evm as any).frameTransactionContext = undefined
+    evm.frameExecutionContext = undefined
   }
 
   if (txInvalid) {
@@ -202,24 +193,23 @@ export async function runFrameTransaction(
 
 /**
  * Default code execution for EOA accounts (no deployed code).
- * Implements the behavior described in the EIP-8141 "Default code" section.
  */
 async function runDefaultCode(
   vm: VM,
-  ctx: FrameTransactionContext,
-  frame: FrameData,
+  tx: FrameEIP8141Tx,
+  execState: FrameExecutionState,
+  frame: ParsedFrame,
   _frameCaller: Address,
   frameTarget: Address,
   gasPrice: bigint,
   block: Block | undefined,
 ): Promise<FrameResult> {
   if (frame.mode === FRAME_MODE.VERIFY) {
-    return runDefaultCodeVerify(vm, ctx, frame, frameTarget)
+    return runDefaultCodeVerify(vm, tx, execState, frame, frameTarget)
   }
   if (frame.mode === FRAME_MODE.SENDER) {
-    return runDefaultCodeSender(vm, ctx, frame, frameTarget, gasPrice, block)
+    return runDefaultCodeSender(vm, tx, execState, frame, frameTarget, gasPrice, block)
   }
-  // DEFAULT mode with no code: revert
   return { status: 0, gasUsed: frame.gasLimit, returnValue: new Uint8Array(0) }
 }
 
@@ -228,8 +218,9 @@ async function runDefaultCode(
  */
 async function runDefaultCodeVerify(
   vm: VM,
-  ctx: FrameTransactionContext,
-  frame: FrameData,
+  tx: FrameEIP8141Tx,
+  execState: FrameExecutionState,
+  frame: ParsedFrame,
   frameTarget: Address,
 ): Promise<FrameResult> {
   const gasUsed = ECRECOVER_GAS + DEFAULT_CODE_OVERHEAD
@@ -237,7 +228,7 @@ async function runDefaultCodeVerify(
     return { status: 0, gasUsed: frame.gasLimit, returnValue: new Uint8Array(0) }
   }
 
-  if (!equalsBytes(frameTarget.bytes, ctx.sender.bytes)) {
+  if (!equalsBytes(frameTarget.bytes, tx.sender.bytes)) {
     return { status: 0, gasUsed, returnValue: new Uint8Array(0) }
   }
 
@@ -250,7 +241,6 @@ async function runDefaultCodeVerify(
   const sigType = firstByte & 0xf
 
   if (sigType === 0x0) {
-    // secp256k1
     if (frame.data.length !== 66) {
       return { status: 0, gasUsed, returnValue: new Uint8Array(0) }
     }
@@ -258,7 +248,9 @@ async function runDefaultCodeVerify(
     const r = frame.data.slice(2, 34)
     const s = frame.data.slice(34, 66)
     const dataWithoutSig = frame.data.slice(0, 1)
-    const hash = keccak256(concatBytes(ctx.sigHash, dataWithoutSig))
+    const sigHash = tx.getHashedMessageToSign()
+    const keccakFn = vm.common.customCrypto.keccak256 ?? keccak_256
+    const hash = keccakFn(concatBytes(sigHash, dataWithoutSig))
 
     let recoveredAddress: Address
     try {
@@ -272,17 +264,15 @@ async function runDefaultCodeVerify(
       return { status: 0, gasUsed, returnValue: new Uint8Array(0) }
     }
   } else {
-    // P256 (0x1) and other types: not implemented yet
     return { status: 0, gasUsed, returnValue: new Uint8Array(0) }
   }
 
-  // Execute APPROVE(scope) logic directly
-  const approveResult = await executeApprove(vm, ctx, frameTarget, scope)
+  const approveResult = await executeApprove(vm, tx, execState, frameTarget, scope)
   if (!approveResult) {
     return { status: 0, gasUsed, returnValue: new Uint8Array(0) }
   }
 
-  ctx.approveCalledInCurrentFrame = true
+  execState.approveCalledInCurrentFrame = true
   return { status: 1, gasUsed, returnValue: new Uint8Array(0) }
 }
 
@@ -291,8 +281,9 @@ async function runDefaultCodeVerify(
  */
 async function runDefaultCodeSender(
   vm: VM,
-  ctx: FrameTransactionContext,
-  frame: FrameData,
+  tx: FrameEIP8141Tx,
+  _execState: FrameExecutionState,
+  frame: ParsedFrame,
   frameTarget: Address,
   gasPrice: bigint,
   block: Block | undefined,
@@ -306,7 +297,7 @@ async function runDefaultCodeSender(
     return { status: 0, gasUsed: frame.gasLimit, returnValue: new Uint8Array(0) }
   }
 
-  if (!equalsBytes(frameTarget.bytes, ctx.sender.bytes)) {
+  if (!equalsBytes(frameTarget.bytes, tx.sender.bytes)) {
     return { status: 0, gasUsed: frame.gasLimit, returnValue: new Uint8Array(0) }
   }
 
@@ -339,12 +330,12 @@ async function runDefaultCodeSender(
     const result = await vm.evm.runCall({
       block,
       gasPrice,
-      caller: ctx.sender,
+      caller: tx.sender,
       gasLimit: remainingGas,
       to: callTarget,
       value: callValue,
       data: callData,
-      origin: ctx.sender,
+      origin: tx.sender,
     })
 
     const callGasUsed = result.execResult.executionGasUsed
@@ -373,45 +364,46 @@ async function runDefaultCodeSender(
  */
 async function executeApprove(
   vm: VM,
-  ctx: FrameTransactionContext,
+  tx: FrameEIP8141Tx,
+  execState: FrameExecutionState,
   target: Address,
   scope: number,
 ): Promise<boolean> {
-  const state = vm.stateManager
+  const stateManager = vm.stateManager
 
   if (scope === 0x0) {
-    if (ctx.senderApproved) return false
-    if (!equalsBytes(target.bytes, ctx.sender.bytes)) return false
-    ctx.senderApproved = true
+    if (execState.senderApproved) return false
+    if (!equalsBytes(target.bytes, tx.sender.bytes)) return false
+    execState.senderApproved = true
     return true
   }
 
   if (scope === 0x1) {
-    if (ctx.payerApproved) return false
-    if (!ctx.senderApproved) return false
-    let account = await state.getAccount(target)
+    if (execState.payerApproved) return false
+    if (!execState.senderApproved) return false
+    let account = await stateManager.getAccount(target)
     if (account === undefined) account = new Account()
-    if (account.balance < ctx.totalGasCost + ctx.totalBlobGasCost) return false
+    if (account.balance < execState.totalGasCost + execState.totalBlobGasCost) return false
     account.nonce += BIGINT_1
-    account.balance -= ctx.totalGasCost + ctx.totalBlobGasCost
+    account.balance -= execState.totalGasCost + execState.totalBlobGasCost
     await vm.evm.journal.putAccount(target, account)
-    ctx.payerApproved = true
-    ctx.payer = target
+    execState.payerApproved = true
+    execState.payer = target
     return true
   }
 
   if (scope === 0x2) {
-    if (ctx.senderApproved || ctx.payerApproved) return false
-    if (!equalsBytes(target.bytes, ctx.sender.bytes)) return false
-    let account = await state.getAccount(target)
+    if (execState.senderApproved || execState.payerApproved) return false
+    if (!equalsBytes(target.bytes, tx.sender.bytes)) return false
+    let account = await stateManager.getAccount(target)
     if (account === undefined) account = new Account()
-    if (account.balance < ctx.totalGasCost + ctx.totalBlobGasCost) return false
-    ctx.senderApproved = true
+    if (account.balance < execState.totalGasCost + execState.totalBlobGasCost) return false
+    execState.senderApproved = true
     account.nonce += BIGINT_1
-    account.balance -= ctx.totalGasCost + ctx.totalBlobGasCost
+    account.balance -= execState.totalGasCost + execState.totalBlobGasCost
     await vm.evm.journal.putAccount(target, account)
-    ctx.payerApproved = true
-    ctx.payer = target
+    execState.payerApproved = true
+    execState.payer = target
     return true
   }
 

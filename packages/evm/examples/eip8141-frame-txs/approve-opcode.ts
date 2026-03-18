@@ -11,40 +11,43 @@ import { Common, Hardfork, Mainnet } from '@ethereumjs/common'
 import {
   ENTRY_POINT_ADDRESS,
   FRAME_MODE,
-  type FrameTransactionContext,
+  type FrameExecutionState,
+  type ParsedFrame,
   createEVM,
 } from '@ethereumjs/evm'
-import { Account, Address, hexToBytes } from '@ethereumjs/util'
+import { type FrameEIP8141TxData, createFrameEIP8141Tx } from '@ethereumjs/tx'
+import { Account, Address, bigIntToUnpaddedBytes, hexToBytes } from '@ethereumjs/util'
 
 async function main() {
   const common = new Common({ chain: Mainnet, hardfork: Hardfork.Prague, eips: [8141] })
   const evm = await createEVM({ common })
 
-  const sender = new Address(hexToBytes('0x' + 'ab'.repeat(20)))
+  const senderHex = '0x' + 'ab'.repeat(20)
+  const sender = new Address(hexToBytes(senderHex))
   const entryPoint = new Address(hexToBytes(ENTRY_POINT_ADDRESS))
 
-  // Fund the sender account
   const initialBalance = 10n ** 18n
   await evm.stateManager.putAccount(sender, new Account(0n, initialBalance))
 
-  const ctx: FrameTransactionContext = {
-    txType: 6,
+  const txData: FrameEIP8141TxData = {
     chainId: 1n,
     nonce: 0n,
-    sender,
+    sender: senderHex as `0x${string}`,
     maxPriorityFeePerGas: 1n,
     maxFeePerGas: 50n,
     maxFeePerBlobGas: 0n,
-    blobVersionedHashes: [],
-    sigHash: new Uint8Array(32),
     frames: [
-      {
-        mode: FRAME_MODE.VERIFY,
-        target: sender,
-        gasLimit: 100000n,
-        data: new Uint8Array(0),
-      },
+      [new Uint8Array([1]), new Uint8Array(0), bigIntToUnpaddedBytes(100000n), new Uint8Array(0)],
     ],
+  }
+  const tx = createFrameEIP8141Tx(txData, { common })
+
+  const parsedFrames: ParsedFrame[] = [
+    { mode: FRAME_MODE.VERIFY, target: sender, gasLimit: 100000n, data: new Uint8Array(0) },
+  ]
+
+  const state: FrameExecutionState = {
+    parsedFrames,
     currentFrameIndex: 0,
     senderApproved: false,
     payerApproved: false,
@@ -53,9 +56,9 @@ async function main() {
     totalGasCost: 100000n * 50n,
     totalBlobGasCost: 0n,
   }
-  ;(evm as any).frameTransactionContext = ctx
 
-  // Bytecode: PUSH1 0x02, APPROVE (scope 2 = approve both sender and payer)
+  evm.frameExecutionContext = { tx, state }
+
   const code = hexToBytes('0x6002aa')
 
   console.log('APPROVE opcode demonstration:')
@@ -75,16 +78,17 @@ async function main() {
 
   console.log()
   console.log(`  Gas used: ${result.execResult.executionGasUsed}`)
-  console.log(`  Sender approved: ${ctx.senderApproved}`)
-  console.log(`  Payer approved: ${ctx.payerApproved}`)
-  console.log(`  APPROVE called: ${ctx.approveCalledInCurrentFrame}`)
+  console.log(`  Sender approved: ${state.senderApproved}`)
+  console.log(`  Payer approved: ${state.payerApproved}`)
+  console.log(`  APPROVE called: ${state.approveCalledInCurrentFrame}`)
 
   const accountAfter = await evm.stateManager.getAccount(sender)
   console.log()
   console.log(`  Sender balance after:  ${accountAfter!.balance}`)
   console.log(`  Sender nonce after:    ${accountAfter!.nonce}`)
   console.log(`  Balance deducted:      ${accountBefore!.balance - accountAfter!.balance}`)
-  ;(evm as any).frameTransactionContext = undefined
+
+  evm.frameExecutionContext = undefined
 }
 
 main().catch(console.error)
