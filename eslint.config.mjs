@@ -26,6 +26,8 @@ export default [
       '**/ethereum-tests/**',
       '**/devnets/**',
       '**/eslint/**',
+      '**/eip-8141-docs/**',
+      '**/eip-8141-docs-dist/**',
       '**/lint-staged.config.js',
       '**/tsconfig.lint.json',
       '**/package.json',

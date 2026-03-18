@@ -122,3 +122,8 @@ __snapshots__
 
 # For local storage
 tmp/
+
+# EIP-8141 docs build output
+eip-8141-docs-dist/
+eip-8141-docs/.vitepress/cache/
+packages/tx/eip-8141-docs/

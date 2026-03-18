@@ -9,6 +9,7 @@ import type { EventEmitter } from 'eventemitter3'
 import type { BinaryTreeAccessWitness } from './binaryTreeAccessWitness.ts'
 import type { EOFContainer } from './eof/container.ts'
 import type { EVMError } from './errors.ts'
+import type { FrameExecutionContext } from './frameContext.ts'
 import type { InterpreterStep, RunState } from './interpreter.ts'
 import type { Message } from './message.ts'
 import type { AsyncDynamicGasHandler, SyncDynamicGasHandler } from './opcodes/gas.ts'
@@ -181,6 +182,7 @@ export interface EVMInterface {
   binaryTreeAccessWitness?: BinaryTreeAccessWitness
   systemBinaryTreeAccessWitness?: BinaryTreeAccessWitness
   blockLevelAccessList?: BlockLevelAccessList
+  frameExecutionContext?: FrameExecutionContext
 }
 
 export type EVMProfilerOpts = {
