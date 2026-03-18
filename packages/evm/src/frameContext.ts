@@ -1,12 +1,13 @@
-import type { Address, PrefixedHexString } from '@ethereumjs/util'
-
 /**
- * EIP-8141 Frame Transaction Context
+ * EIP-8141 Frame Execution Context
  *
- * Generic interface with no dependency on @ethereumjs/tx.
- * The VM populates this from the transaction object and sets it
- * on the EVM before starting the frame execution loop.
+ * Holds a reference to the actual FrameEIP8141Tx plus mutable runtime
+ * state needed during frame execution. The EVM stores this as an
+ * optional property — set by the VM before the frame loop, cleared after.
  */
+
+import type { FrameEIP8141Tx } from '@ethereumjs/tx'
+import type { Address, PrefixedHexString } from '@ethereumjs/util'
 
 export const FRAME_MODE = {
   DEFAULT: 0,
@@ -16,7 +17,7 @@ export const FRAME_MODE = {
 
 export const ENTRY_POINT_ADDRESS = '0x00000000000000000000000000000000000000aa' as PrefixedHexString
 
-export interface FrameData {
+export interface ParsedFrame {
   mode: number
   target: Address | null
   gasLimit: bigint
@@ -29,27 +30,27 @@ export interface FrameResult {
   returnValue: Uint8Array
 }
 
-export interface FrameTransactionContext {
-  txType: number
-  chainId: bigint
-  nonce: bigint
-  sender: Address
-  maxPriorityFeePerGas: bigint
-  maxFeePerGas: bigint
-  maxFeePerBlobGas: bigint
-  blobVersionedHashes: PrefixedHexString[]
-  sigHash: Uint8Array
-
-  frames: FrameData[]
-
+/**
+ * Mutable runtime state that evolves during frame execution.
+ * Separated from the immutable tx object for clarity.
+ */
+export interface FrameExecutionState {
+  parsedFrames: ParsedFrame[]
   currentFrameIndex: number
   senderApproved: boolean
   payerApproved: boolean
   payer?: Address
   approveCalledInCurrentFrame: boolean
-
   frameResults: FrameResult[]
-
   totalGasCost: bigint
   totalBlobGasCost: bigint
+}
+
+/**
+ * The frame execution context set on the EVM during EIP-8141 frame tx processing.
+ * Combines the immutable transaction with mutable execution state.
+ */
+export interface FrameExecutionContext {
+  tx: FrameEIP8141Tx
+  state: FrameExecutionState
 }

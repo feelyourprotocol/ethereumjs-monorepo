@@ -1709,62 +1709,61 @@ export const handlers: Map<number, OpHandler> = new Map([
     async function (runState: RunState) {
       const scope = runState.stack.pop()
       const evm = runState.interpreter._evm
-      const ctx = (evm as any).frameTransactionContext as
-        | import('../frameContext.ts').FrameTransactionContext
-        | undefined
-      if (ctx === undefined) {
+      const fctx = evm.frameExecutionContext
+      if (fctx === undefined) {
         return trap(EVMError.errorMessages.REVERT)
       }
+      const { tx, state } = fctx
 
       const address = runState.env.address
-      const currentFrame = ctx.frames[ctx.currentFrameIndex]
-      const frameTarget = currentFrame.target ?? ctx.sender
+      const currentFrame = state.parsedFrames[state.currentFrameIndex]
+      const frameTarget = currentFrame.target ?? tx.sender
       if (!equalsBytes(address.bytes, frameTarget.bytes)) {
         trap(EVMError.errorMessages.REVERT)
       }
 
       if (scope === BIGINT_0) {
-        if (ctx.senderApproved) trap(EVMError.errorMessages.REVERT)
-        if (!equalsBytes(frameTarget.bytes, ctx.sender.bytes)) {
+        if (state.senderApproved) trap(EVMError.errorMessages.REVERT)
+        if (!equalsBytes(frameTarget.bytes, tx.sender.bytes)) {
           trap(EVMError.errorMessages.REVERT)
         }
-        ctx.senderApproved = true
+        state.senderApproved = true
       } else if (scope === BIGINT_1) {
-        if (ctx.payerApproved) trap(EVMError.errorMessages.REVERT)
-        if (!ctx.senderApproved) trap(EVMError.errorMessages.REVERT)
+        if (state.payerApproved) trap(EVMError.errorMessages.REVERT)
+        if (!state.senderApproved) trap(EVMError.errorMessages.REVERT)
         let account = await runState.stateManager.getAccount(frameTarget)
         if (account === undefined) account = new Account()
-        if (account.balance < ctx.totalGasCost + ctx.totalBlobGasCost) {
+        if (account.balance < state.totalGasCost + state.totalBlobGasCost) {
           trap(EVMError.errorMessages.REVERT)
         }
         account.nonce += BIGINT_1
-        account.balance -= ctx.totalGasCost + ctx.totalBlobGasCost
+        account.balance -= state.totalGasCost + state.totalBlobGasCost
         await runState.stateManager.putAccount(frameTarget, account)
-        ctx.payerApproved = true
-        ctx.payer = frameTarget
+        state.payerApproved = true
+        state.payer = frameTarget
       } else if (scope === BIGINT_2) {
-        if (ctx.senderApproved || ctx.payerApproved) {
+        if (state.senderApproved || state.payerApproved) {
           trap(EVMError.errorMessages.REVERT)
         }
-        if (!equalsBytes(frameTarget.bytes, ctx.sender.bytes)) {
+        if (!equalsBytes(frameTarget.bytes, tx.sender.bytes)) {
           trap(EVMError.errorMessages.REVERT)
         }
         let account = await runState.stateManager.getAccount(frameTarget)
         if (account === undefined) account = new Account()
-        if (account.balance < ctx.totalGasCost + ctx.totalBlobGasCost) {
+        if (account.balance < state.totalGasCost + state.totalBlobGasCost) {
           trap(EVMError.errorMessages.REVERT)
         }
-        ctx.senderApproved = true
+        state.senderApproved = true
         account.nonce += BIGINT_1
-        account.balance -= ctx.totalGasCost + ctx.totalBlobGasCost
+        account.balance -= state.totalGasCost + state.totalBlobGasCost
         await runState.stateManager.putAccount(frameTarget, account)
-        ctx.payerApproved = true
-        ctx.payer = frameTarget
+        state.payerApproved = true
+        state.payer = frameTarget
       } else {
         trap(EVMError.errorMessages.REVERT)
       }
 
-      ctx.approveCalledInCurrentFrame = true
+      state.approveCalledInCurrentFrame = true
       runState.interpreter.finish(new Uint8Array(0))
     },
   ],
@@ -1774,81 +1773,80 @@ export const handlers: Map<number, OpHandler> = new Map([
     function (runState: RunState) {
       const [param, in2] = runState.stack.popN(2)
       const evm = runState.interpreter._evm
-      const ctx = (evm as any).frameTransactionContext as
-        | import('../frameContext.ts').FrameTransactionContext
-        | undefined
-      if (ctx === undefined) {
+      const fctx = evm.frameExecutionContext
+      if (fctx === undefined) {
         return trap(EVMError.errorMessages.INVALID_OPCODE)
       }
+      const { tx, state } = fctx
       const paramNum = Number(param)
       switch (paramNum) {
         case 0x00:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(BigInt(ctx.txType))
+          runState.stack.push(BigInt(tx.type))
           break
         case 0x01:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(ctx.nonce)
+          runState.stack.push(tx.nonce)
           break
         case 0x02:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(bytesToBigInt(ctx.sender.bytes))
+          runState.stack.push(bytesToBigInt(tx.sender.bytes))
           break
         case 0x03:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(ctx.maxPriorityFeePerGas)
+          runState.stack.push(tx.maxPriorityFeePerGas)
           break
         case 0x04:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(ctx.maxFeePerGas)
+          runState.stack.push(tx.maxFeePerGas)
           break
         case 0x05:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(ctx.maxFeePerBlobGas)
+          runState.stack.push(tx.maxFeePerBlobGas)
           break
         case 0x06:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(ctx.totalGasCost + ctx.totalBlobGasCost)
+          runState.stack.push(state.totalGasCost + state.totalBlobGasCost)
           break
         case 0x07:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(BigInt(ctx.blobVersionedHashes.length))
+          runState.stack.push(BigInt(tx.blobVersionedHashes.length))
           break
         case 0x08:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(bytesToBigInt(ctx.sigHash))
+          runState.stack.push(bytesToBigInt(tx.getHashedMessageToSign()))
           break
         case 0x09:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(BigInt(ctx.frames.length))
+          runState.stack.push(BigInt(state.parsedFrames.length))
           break
         case 0x10:
           if (in2 !== BIGINT_0) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(BigInt(ctx.currentFrameIndex))
+          runState.stack.push(BigInt(state.currentFrameIndex))
           break
         case 0x11: {
           const idx = Number(in2)
-          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
-          const t = ctx.frames[idx].target
-          runState.stack.push(t !== null ? bytesToBigInt(t.bytes) : bytesToBigInt(ctx.sender.bytes))
+          if (idx >= state.parsedFrames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          const t = state.parsedFrames[idx].target
+          runState.stack.push(t !== null ? bytesToBigInt(t.bytes) : bytesToBigInt(tx.sender.bytes))
           break
         }
         case 0x12: {
           const idx = Number(in2)
-          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(ctx.frames[idx].gasLimit)
+          if (idx >= state.parsedFrames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(state.parsedFrames[idx].gasLimit)
           break
         }
         case 0x13: {
           const idx = Number(in2)
-          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
-          runState.stack.push(BigInt(ctx.frames[idx].mode))
+          if (idx >= state.parsedFrames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          runState.stack.push(BigInt(state.parsedFrames[idx].mode))
           break
         }
         case 0x14: {
           const idx = Number(in2)
-          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
-          const frame = ctx.frames[idx]
+          if (idx >= state.parsedFrames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          const frame = state.parsedFrames[idx]
           if (frame.mode === 1) {
             runState.stack.push(BIGINT_0)
           } else {
@@ -1858,9 +1856,9 @@ export const handlers: Map<number, OpHandler> = new Map([
         }
         case 0x15: {
           const idx = Number(in2)
-          if (idx >= ctx.frames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
-          if (idx >= ctx.currentFrameIndex) trap(EVMError.errorMessages.INVALID_OPCODE)
-          const fr = ctx.frameResults[idx]
+          if (idx >= state.parsedFrames.length) trap(EVMError.errorMessages.INVALID_OPCODE)
+          if (idx >= state.currentFrameIndex) trap(EVMError.errorMessages.INVALID_OPCODE)
+          const fr = state.frameResults[idx]
           if (fr === undefined) trap(EVMError.errorMessages.INVALID_OPCODE)
           runState.stack.push(BigInt(fr.status))
           break
@@ -1876,13 +1874,12 @@ export const handlers: Map<number, OpHandler> = new Map([
     function (runState: RunState) {
       const [offset, frameIndex] = runState.stack.popN(2)
       const evm = runState.interpreter._evm
-      const ctx = (evm as any).frameTransactionContext as
-        | import('../frameContext.ts').FrameTransactionContext
-        | undefined
-      if (ctx === undefined) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const fctx = evm.frameExecutionContext
+      if (fctx === undefined) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const { state } = fctx
       const idx = Number(frameIndex)
-      if (idx >= ctx.frames.length) return trap(EVMError.errorMessages.INVALID_OPCODE)
-      const frame = ctx.frames[idx]
+      if (idx >= state.parsedFrames.length) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const frame = state.parsedFrames[idx]
       if (frame.mode === 1) {
         runState.stack.push(BIGINT_0)
         return
@@ -1903,13 +1900,12 @@ export const handlers: Map<number, OpHandler> = new Map([
     function (runState: RunState) {
       const [memOffset, dataOffset, length, frameIndex] = runState.stack.popN(4)
       const evm = runState.interpreter._evm
-      const ctx = (evm as any).frameTransactionContext as
-        | import('../frameContext.ts').FrameTransactionContext
-        | undefined
-      if (ctx === undefined) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const fctx = evm.frameExecutionContext
+      if (fctx === undefined) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const { state } = fctx
       const idx = Number(frameIndex)
-      if (idx >= ctx.frames.length) return trap(EVMError.errorMessages.INVALID_OPCODE)
-      const frame = ctx.frames[idx]
+      if (idx >= state.parsedFrames.length) return trap(EVMError.errorMessages.INVALID_OPCODE)
+      const frame = state.parsedFrames[idx]
       if (frame.mode === 1 || length === BIGINT_0) {
         return
       }

@@ -2,7 +2,16 @@ import { cliqueSigner, createBlockHeader } from '@ethereumjs/block'
 import { ConsensusType, Hardfork } from '@ethereumjs/common'
 import { BinaryTreeAccessWitness, type EVM } from '@ethereumjs/evm'
 import { Capability, isBlob4844Tx, isFrameEIP8141Tx } from '@ethereumjs/tx'
-import type { FrameEIP8141Tx } from '@ethereumjs/tx'
+import type {
+  AccessList,
+  AccessList2930Tx,
+  AccessListItem,
+  EIP7702CompatibleTx,
+  FeeMarket1559Tx,
+  FrameEIP8141Tx,
+  LegacyTx,
+  TypedTransaction,
+} from '@ethereumjs/tx'
 import {
   Account,
   Address,
@@ -31,15 +40,6 @@ import { runFrameTransaction } from './runFrameTx.ts'
 
 import type { Block } from '@ethereumjs/block'
 import type { Common } from '@ethereumjs/common'
-import type {
-  AccessList,
-  AccessList2930Tx,
-  AccessListItem,
-  EIP7702CompatibleTx,
-  FeeMarket1559Tx,
-  LegacyTx,
-  TypedTransaction,
-} from '@ethereumjs/tx'
 import type {
   AfterTxEvent,
   BaseTxReceipt,

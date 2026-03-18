@@ -5,20 +5,18 @@ import {
   Address,
   BIGINT_0,
   bigIntToUnpaddedBytes,
-  bytesToBigInt,
   concatBytes,
-  ecrecover,
-  equalsBytes,
   hexToBytes,
   privateToPublic,
   publicToAddress,
 } from '@ethereumjs/util'
-import { keccak256 } from 'ethereum-cryptography/keccak.js'
+import { secp256k1 } from '@noble/curves/secp256k1.js'
+import { keccak_256 } from '@noble/hashes/sha3.js'
 import { assert, describe, it } from 'vitest'
 
 import { createVM, runTx } from '../../../src/index.ts'
 
-const PRIVATE_KEY = hexToBytes('0x' + 'ab'.repeat(32))
+const PRIVATE_KEY = hexToBytes(('0x' + 'ab'.repeat(32)) as `0x${string}`)
 const PUBLIC_KEY = privateToPublic(PRIVATE_KEY)
 const SENDER_ADDR = new Address(publicToAddress(PUBLIC_KEY))
 
@@ -34,16 +32,15 @@ function createCommonWith8141(): Common {
 function buildVerifyData(scope: number, sigHash: Uint8Array, privateKey: Uint8Array): Uint8Array {
   const byte0 = ((scope & 0xf) << 4) | 0x00
   const dataWithoutSig = new Uint8Array([byte0])
-  const hash = keccak256(concatBytes(sigHash, dataWithoutSig))
+  const hash = keccak_256(concatBytes(sigHash, dataWithoutSig))
 
-  const { secp256k1 } = require('ethereum-cryptography/secp256k1.js')
   const sig = secp256k1.sign(hash, privateKey.slice(0, 32))
-  const r = sig.r
-  const s = sig.s
-  const v = sig.recovery + 27
+  const r = sig[0]
+  const s = sig[1]
+  const v = sig[2] + 27
 
-  const rBytes = bigIntToUnpaddedBytes(r)
-  const sBytes = bigIntToUnpaddedBytes(s)
+  const rBytes = bigIntToUnpaddedBytes(BigInt(r))
+  const sBytes = bigIntToUnpaddedBytes(BigInt(s))
   const rPadded = new Uint8Array(32)
   rPadded.set(rBytes, 32 - rBytes.length)
   const sPadded = new Uint8Array(32)

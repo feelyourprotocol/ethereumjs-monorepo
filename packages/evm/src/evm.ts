@@ -25,6 +25,7 @@ import { createEIP7708TransferLog } from './eip7708.ts'
 import { FORMAT } from './eof/constants.ts'
 import { isEOF } from './eof/util.ts'
 import { EVMError } from './errors.ts'
+import type { FrameExecutionContext } from './frameContext.ts'
 import { Interpreter } from './interpreter.ts'
 import { Journal } from './journal.ts'
 import { EVMPerformanceLogger } from './logger.ts'
@@ -197,8 +198,8 @@ export class EVM implements EVMInterface {
   }
   protected _block?: Block
 
-  /** EIP-8141 frame transaction context, set by the VM during frame tx execution */
-  public frameTransactionContext?: import('./frameContext.ts').FrameTransactionContext
+  /** EIP-8141 frame execution context, set by the VM during frame tx execution */
+  public frameExecutionContext?: FrameExecutionContext
 
   public readonly common: Common
   public readonly events: EventEmitter<EVMEvent>
