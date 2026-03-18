@@ -14,7 +14,7 @@
     <a href="/doc-updates" class="box box-date">
       <span class="box-icon">📅</span>
       <div class="box-content">
-        <strong>Last Updated: March 17, 2026</strong>
+        <strong>Last Updated: March 18, 2026</strong>
         <p>
           EIP version:
           <code>ee66073</code> (March 13, 2026). Docs update quasi-daily —

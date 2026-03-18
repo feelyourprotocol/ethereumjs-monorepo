@@ -4,6 +4,15 @@ This page tracks what changed in the documentation with each update. Newest entr
 
 ---
 
+## March 18, 2026
+
+**Architecture pivot: EVM tx dependency refactor.**
+
+- **[Architecture Choices](/design-decisions/architecture)** — new major design decision entry documenting the pivot from a tx-agnostic `FrameTransactionContext` to a typed `FrameExecutionContext` that holds the actual `FrameEIP8141Tx` plus lean runtime state. Covers the original design, what went wrong, the decision, trade-offs, and rationale.
+- **Code changes:** Added `@ethereumjs/tx` dependency to EVM, rewrote `frameContext.ts` (60 lines replacing 55), updated 4 opcode handlers to use typed `evm.frameExecutionContext` (no more `any` casts), simplified `runFrameTx.ts` (removed 35-line field-copy block), updated all EVM tests and examples to use real tx objects.
+
+---
+
 ## March 17, 2026 (Update 2)
 
 **EVM & VM vertical integration** — the "Simple Transaction" flow works end-to-end.
