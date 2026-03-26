@@ -3,10 +3,10 @@ import {
   ValueEncoding,
   bytesToUnprefixedHex,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { LRUCache } from 'lru-cache'
 
-import type { BatchDBOp, DB, EncodingOpts } from '@ethereumjs/util'
+import type { BatchDBOp, DB, EncodingOpts } from '@feelyourprotocol/util'
 import type { Checkpoint, CheckpointDBOpts } from '../types.ts'
 
 /**

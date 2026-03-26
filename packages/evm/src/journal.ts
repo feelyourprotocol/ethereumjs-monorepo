@@ -1,4 +1,4 @@
-import { Hardfork } from '@ethereumjs/common'
+import { Hardfork } from '@feelyourprotocol/common'
 import {
   Address,
   EthereumJSErrorWithoutCode,
@@ -9,11 +9,11 @@ import {
   isDebugEnabled,
   stripHexPrefix,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 
-import type { Common, StateManagerInterface } from '@ethereumjs/common'
-import type { Account, PrefixedHexString } from '@ethereumjs/util'
+import type { Common, StateManagerInterface } from '@feelyourprotocol/common'
+import type { Account, PrefixedHexString } from '@feelyourprotocol/util'
 import type { Debugger } from 'debug'
 
 type AddressString = string

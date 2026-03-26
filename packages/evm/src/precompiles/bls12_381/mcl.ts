@@ -5,7 +5,7 @@ import {
   equalsBytes,
   setLengthLeft,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import { EVMError } from '../../errors.ts'
 

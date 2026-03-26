@@ -1,6 +1,6 @@
-import { bytesToBigInt, toBytes } from '@ethereumjs/util'
+import { bytesToBigInt, toBytes } from '@feelyourprotocol/util'
 
-import type { Common, Hardfork, ParamsDict } from '@ethereumjs/common'
+import type { Common, Hardfork, ParamsDict } from '@feelyourprotocol/common'
 import type {
   Address,
   AddressLike,
@@ -9,7 +9,7 @@ import type {
   EOACode7702AuthorizationList,
   EOACode7702AuthorizationListBytes,
   PrefixedHexString,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import type { FeeMarket1559Tx } from './1559/tx.ts'
 import type { AccessList2930Tx } from './2930/tx.ts'
 import type { Blob4844Tx } from './4844/tx.ts'
@@ -77,7 +77,7 @@ export interface TxOptions {
   common?: Common
   /**
    * Tx parameters sorted by EIP can be found in the exported `paramsTx` dictionary,
-   * which is internally passed to the associated `@ethereumjs/common` instance which
+   * which is internally passed to the associated `@feelyourprotocol/common` instance which
    * manages parameter selection based on the hardfork and EIP settings.
    *
    * This option allows providing a custom set of parameters. Note that parameters

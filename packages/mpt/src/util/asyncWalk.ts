@@ -1,5 +1,5 @@
-import { RLP } from '@ethereumjs/rlp'
-import { bytesToHex, equalsBytes } from '@ethereumjs/util'
+import { RLP } from '@feelyourprotocol/rlp'
+import { bytesToHex, equalsBytes } from '@feelyourprotocol/util'
 
 import { BranchMPTNode } from '../node/branch.ts'
 import { ExtensionMPTNode } from '../node/extension.ts'

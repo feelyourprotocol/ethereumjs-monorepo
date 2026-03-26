@@ -1,8 +1,13 @@
-import { EthereumJSErrorWithoutCode, bytesToHex, concatBytes, equalsBytes } from '@ethereumjs/util'
+import {
+  EthereumJSErrorWithoutCode,
+  bytesToHex,
+  concatBytes,
+  equalsBytes,
+} from '@feelyourprotocol/util'
 
 import { type MPTOpts, MerklePatriciaTrie, type Proof, createMPTFromProof } from '../index.ts'
 
-import type { PutBatch } from '@ethereumjs/util'
+import type { PutBatch } from '@feelyourprotocol/util'
 
 /**
  * An (EIP-1186)[https://eips.ethereum.org/EIPS/eip-1186] proof contains the encoded trie nodes

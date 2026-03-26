@@ -1,5 +1,5 @@
-import { RLP } from '@ethereumjs/rlp'
-import { EthereumJSErrorWithoutCode, type NestedUint8Array } from '@ethereumjs/util'
+import { RLP } from '@feelyourprotocol/rlp'
+import { EthereumJSErrorWithoutCode, type NestedUint8Array } from '@feelyourprotocol/util'
 
 import { isTerminator } from '../util/hex.ts'
 import { bytesToNibbles } from '../util/nibbles.ts'

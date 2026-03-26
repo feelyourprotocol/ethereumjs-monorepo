@@ -4,7 +4,7 @@ import {
   ValueEncoding,
   bytesToHex,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { blake3 } from '@noble/hashes/blake3.js'
 
 import { BinaryTree } from './binaryTree.ts'

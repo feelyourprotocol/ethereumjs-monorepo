@@ -1,5 +1,5 @@
-import { ConsensusAlgorithm } from '@ethereumjs/common'
-import { RLP } from '@ethereumjs/rlp'
+import { ConsensusAlgorithm } from '@feelyourprotocol/common'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   Address,
   BIGINT_0,
@@ -11,10 +11,10 @@ import {
   createZeroAddress,
   ecrecover,
   equalsBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { secp256k1 } from '@noble/curves/secp256k1.js'
 
-import type { CliqueConfig } from '@ethereumjs/common'
+import type { CliqueConfig } from '@feelyourprotocol/common'
 import type { BlockHeader } from '../index.ts'
 
 // Fixed number of extra-data prefix bytes reserved for signer vanity

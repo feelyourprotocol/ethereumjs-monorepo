@@ -1,5 +1,5 @@
-import { Hardfork } from '@ethereumjs/common'
-import type { BlockLevelAccessList, PrefixedHexString } from '@ethereumjs/util'
+import { Hardfork } from '@feelyourprotocol/common'
+import type { BlockLevelAccessList, PrefixedHexString } from '@feelyourprotocol/util'
 import {
   Account,
   Address,
@@ -18,7 +18,7 @@ import {
   generateAddress2,
   isDebugEnabled,
   short,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 import { EventEmitter } from 'eventemitter3'
 
@@ -52,7 +52,7 @@ import {
   type Log,
 } from './types.ts'
 
-import type { Common, StateManagerInterface } from '@ethereumjs/common'
+import type { Common, StateManagerInterface } from '@feelyourprotocol/common'
 import type { BinaryTreeAccessWitness } from './binaryTreeAccessWitness.ts'
 import type { InterpreterOpts } from './interpreter.ts'
 import type { Timer } from './logger.ts'

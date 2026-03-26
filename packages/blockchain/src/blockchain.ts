@@ -1,5 +1,11 @@
-import { Block, BlockHeader, createBlock } from '@ethereumjs/block'
-import { Common, ConsensusAlgorithm, ConsensusType, Hardfork, Mainnet } from '@ethereumjs/common'
+import { Block, BlockHeader, createBlock } from '@feelyourprotocol/block'
+import {
+  Common,
+  ConsensusAlgorithm,
+  ConsensusType,
+  Hardfork,
+  Mainnet,
+} from '@feelyourprotocol/common'
 import {
   BIGINT_0,
   BIGINT_1,
@@ -15,7 +21,7 @@ import {
   concatBytes,
   equalsBytes,
   isDebugEnabled,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 import { EventEmitter } from 'eventemitter3'
 
@@ -30,9 +36,9 @@ import {
 import { DBManager } from './db/manager.ts'
 import { DBTarget } from './db/operation.ts'
 
-import type { HeaderData } from '@ethereumjs/block'
-import type { CliqueConfig, GenesisState } from '@ethereumjs/common'
-import type { BigIntLike, DB, DBObject } from '@ethereumjs/util'
+import type { HeaderData } from '@feelyourprotocol/block'
+import type { CliqueConfig, GenesisState } from '@feelyourprotocol/common'
+import type { BigIntLike, DB, DBObject } from '@feelyourprotocol/util'
 import type { Debugger } from 'debug'
 import type {
   BlockchainEvent,

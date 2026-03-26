@@ -1,5 +1,5 @@
-import { Common, Mainnet } from '@ethereumjs/common'
-import { SimpleStateManager } from '@ethereumjs/statemanager'
+import { Common, Mainnet } from '@feelyourprotocol/common'
+import { SimpleStateManager } from '@feelyourprotocol/statemanager'
 
 import { EVM } from './index.ts'
 import { NobleBN254 } from './precompiles/index.ts'

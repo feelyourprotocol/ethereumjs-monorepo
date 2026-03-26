@@ -7,7 +7,7 @@ import type {
   Address,
   BinaryTreeExecutionWitness,
   PrefixedHexString,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 export interface StorageDump {
   [key: string]: string
@@ -120,7 +120,7 @@ export interface BinaryTreeAccessWitnessInterface {
 }
 
 /*
- * Generic StateManager interface corresponding with the @ethereumjs/statemanager package
+ * Generic StateManager interface corresponding with the @feelyourprotocol/statemanager package
  *
  */
 export interface StateManagerInterface {

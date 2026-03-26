@@ -1,13 +1,13 @@
-import { createEVM } from '@ethereumjs/evm'
+import { createEVM } from '@feelyourprotocol/evm'
 import { EventEmitter } from 'eventemitter3'
 
 import { createVM } from './constructors.ts'
 import { paramsVM } from './params.ts'
 
-import type { Common, StateManagerInterface } from '@ethereumjs/common'
-import type { EVMInterface, EVMMockBlockchainInterface } from '@ethereumjs/evm'
-import { isDebugEnabled } from '@ethereumjs/util'
-import type { BigIntLike } from '@ethereumjs/util'
+import type { Common, StateManagerInterface } from '@feelyourprotocol/common'
+import type { EVMInterface, EVMMockBlockchainInterface } from '@feelyourprotocol/evm'
+import { isDebugEnabled } from '@feelyourprotocol/util'
+import type { BigIntLike } from '@feelyourprotocol/util'
 import type { VMEvent, VMOpts } from './types.ts'
 
 /**

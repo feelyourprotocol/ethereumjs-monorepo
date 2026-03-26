@@ -1,7 +1,7 @@
-import { EthereumJSErrorWithoutCode } from '@ethereumjs/util'
+import { EthereumJSErrorWithoutCode } from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
-import type { Common } from '@ethereumjs/common'
+import type { Common } from '@feelyourprotocol/common'
 
 const BYTE_SIZE = 256
 

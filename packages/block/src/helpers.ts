@@ -1,6 +1,6 @@
-import { MerklePatriciaTrie } from '@ethereumjs/mpt'
-import { RLP } from '@ethereumjs/rlp'
-import { Blob4844Tx } from '@ethereumjs/tx'
+import { MerklePatriciaTrie } from '@feelyourprotocol/mpt'
+import { RLP } from '@feelyourprotocol/rlp'
+import { Blob4844Tx } from '@feelyourprotocol/tx'
 import {
   BIGINT_0,
   BIGINT_1,
@@ -9,11 +9,16 @@ import {
   concatBytes,
   isHexString,
   toType,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
-import { type Common } from '@ethereumjs/common'
-import type { TypedTransaction } from '@ethereumjs/tx'
-import type { CLRequest, CLRequestType, PrefixedHexString, Withdrawal } from '@ethereumjs/util'
+import { type Common } from '@feelyourprotocol/common'
+import type { TypedTransaction } from '@feelyourprotocol/tx'
+import type {
+  CLRequest,
+  CLRequestType,
+  PrefixedHexString,
+  Withdrawal,
+} from '@feelyourprotocol/util'
 import type { BlockHeaderBytes, HeaderData } from './types.ts'
 /**
  * Returns a 0x-prefixed hex number string from a hex string or string integer.

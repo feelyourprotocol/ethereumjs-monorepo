@@ -1,4 +1,4 @@
-import { RLP } from '@ethereumjs/rlp'
+import { RLP } from '@feelyourprotocol/rlp'
 
 import type { BranchMPTNodeBranchValue, NodeReferenceOrRawMPTNode } from '../types.ts'
 

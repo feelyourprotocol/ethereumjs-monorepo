@@ -1,5 +1,5 @@
-import type { ParamsDict } from '@ethereumjs/common'
-import { SYSTEM_ADDRESS } from '@ethereumjs/util'
+import type { ParamsDict } from '@feelyourprotocol/common'
+import { SYSTEM_ADDRESS } from '@feelyourprotocol/util'
 
 export const paramsEVM: ParamsDict = {
   /**

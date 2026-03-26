@@ -1,6 +1,6 @@
-import { Common, Mainnet } from '@ethereumjs/common'
-import { MerklePatriciaTrie } from '@ethereumjs/mpt'
-import { RLP } from '@ethereumjs/rlp'
+import { Common, Mainnet } from '@feelyourprotocol/common'
+import { MerklePatriciaTrie } from '@feelyourprotocol/mpt'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   Account,
   EthereumJSErrorWithoutCode,
@@ -17,7 +17,7 @@ import {
   unpadBytes,
   unprefixedHexToBytes,
   utf8ToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 import debugDefault from 'debug'
 
@@ -30,8 +30,8 @@ import type {
   StateManagerInterface,
   StorageDump,
   StorageRange,
-} from '@ethereumjs/common'
-import type { Address, DB } from '@ethereumjs/util'
+} from '@feelyourprotocol/common'
+import type { Address, DB } from '@feelyourprotocol/util'
 import type { Debugger } from 'debug'
 
 /**
@@ -52,10 +52,10 @@ export const CODEHASH_PREFIX = utf8ToBytes('c')
  * and storage slots.
  *
  * The default state manager implementation uses a
- * `@ethereumjs/mpt` trie as a data backend.
+ * `@feelyourprotocol/mpt` trie as a data backend.
  *
  * Note that there is a `SimpleStateManager` dependency-free state
- * manager implementation available shipped with the `@ethereumjs/statemanager`
+ * manager implementation available shipped with the `@feelyourprotocol/statemanager`
  * package which might be an alternative to this implementation
  * for many basic use cases.
  */

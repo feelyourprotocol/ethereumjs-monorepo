@@ -1,4 +1,4 @@
-import { RLP } from '@ethereumjs/rlp'
+import { RLP } from '@feelyourprotocol/rlp'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 import {
   bigIntToBytes,

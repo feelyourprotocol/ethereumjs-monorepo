@@ -1,7 +1,7 @@
-import { ChainGenesis } from '@ethereumjs/common'
-import { genesisMPTStateRoot } from '@ethereumjs/mpt'
+import { ChainGenesis } from '@feelyourprotocol/common'
+import { genesisMPTStateRoot } from '@feelyourprotocol/mpt'
 
-import type { Chain, Common, GenesisState } from '@ethereumjs/common'
+import type { Chain, Common, GenesisState } from '@feelyourprotocol/common'
 
 /**
  * Safe creation of a new Blockchain object awaiting the initialization function,

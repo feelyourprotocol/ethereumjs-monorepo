@@ -1,5 +1,5 @@
-import { Mainnet } from '@ethereumjs/common'
-import type { BlockLevelAccessList, PrefixedHexString } from '@ethereumjs/util'
+import { Mainnet } from '@feelyourprotocol/common'
+import type { BlockLevelAccessList, PrefixedHexString } from '@feelyourprotocol/util'
 import {
   CLRequest,
   CLRequestType,
@@ -11,7 +11,7 @@ import {
   concatBytes,
   createAddressFromString,
   setLengthLeft,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import type { RunTxResult } from './types.ts'
 import type { VM } from './vm.ts'

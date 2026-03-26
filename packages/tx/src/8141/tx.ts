@@ -7,7 +7,7 @@ import {
   bytesToBigInt,
   bytesToHex,
   toBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import * as EIP2718 from '../capabilities/eip2718.ts'
@@ -16,7 +16,7 @@ import { paramsTx } from '../params.ts'
 import { TransactionType } from '../types.ts'
 import { getCommon, valueOverflowCheck } from '../util/internal.ts'
 
-import type { Common } from '@ethereumjs/common'
+import type { Common } from '@feelyourprotocol/common'
 import type {
   Capability,
   FrameEIP8141TxData,

@@ -5,7 +5,7 @@ import {
   concatBytes,
   equalsBytes,
   setLengthLeft,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { bls12_381 } from '@noble/curves/bls12-381.js'
 
 import { EVMError } from '../../errors.ts'

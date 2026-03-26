@@ -27,7 +27,7 @@ import {
   equalsBytes,
   setLengthLeft,
   setLengthRight,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import { EOFContainer, EOFContainerMode } from '../eof/container.ts'
@@ -51,7 +51,7 @@ import {
   writeCallOutput,
 } from './util.ts'
 
-import type { Common } from '@ethereumjs/common'
+import type { Common } from '@feelyourprotocol/common'
 import type { RunState } from '../interpreter.ts'
 
 export interface SyncOpHandler {

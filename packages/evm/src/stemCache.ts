@@ -1,4 +1,4 @@
-import type { PrefixedHexString } from '@ethereumjs/util'
+import type { PrefixedHexString } from '@feelyourprotocol/util'
 import type { BinaryStemAccessEvent, BinaryStemMeta } from './binaryTreeAccessWitness.ts'
 
 export class StemCache {

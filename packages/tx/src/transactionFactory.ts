@@ -1,4 +1,4 @@
-import { EthereumJSErrorWithoutCode, fetchFromProvider, getProvider } from '@ethereumjs/util'
+import { EthereumJSErrorWithoutCode, fetchFromProvider, getProvider } from '@feelyourprotocol/util'
 
 import { createFeeMarket1559Tx, createFeeMarket1559TxFromRLP } from './1559/constructors.ts'
 import { createAccessList2930Tx, createAccessList2930TxFromRLP } from './2930/constructors.ts'
@@ -21,7 +21,7 @@ import {
 } from './types.ts'
 import { normalizeTxParams } from './util/general.ts'
 
-import type { EthersProvider } from '@ethereumjs/util'
+import type { EthersProvider } from '@feelyourprotocol/util'
 import type { Transaction, TxData, TxOptions, TypedTxData } from './types.ts'
 /**
  * Create a transaction from a `txData` object

@@ -1,5 +1,5 @@
-import { Common, Mainnet } from '@ethereumjs/common'
-import { RLP } from '@ethereumjs/rlp'
+import { Common, Mainnet } from '@feelyourprotocol/common'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   Account,
   EthereumJSErrorWithoutCode,
@@ -13,15 +13,15 @@ import {
   intToHex,
   isDebugEnabled,
   toBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 import debugDefault from 'debug'
 
 import { Caches, OriginalStorageCache } from './cache/index.ts'
 import { modifyAccountFields } from './util.ts'
 
-import type { AccountFields, StateManagerInterface, StorageDump } from '@ethereumjs/common'
-import type { Address } from '@ethereumjs/util'
+import type { AccountFields, StateManagerInterface, StorageDump } from '@feelyourprotocol/common'
+import type { Address } from '@feelyourprotocol/util'
 import type { Debugger } from 'debug'
 import type { RPCStateManagerOpts } from './index.ts'
 

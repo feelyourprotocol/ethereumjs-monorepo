@@ -6,7 +6,7 @@ import {
   equalsBytes,
   hexToBytes,
   setLengthLeft,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { bn254 } from '@noble/curves/bn254.js'
 
 import { EVMError } from '../../errors.ts'

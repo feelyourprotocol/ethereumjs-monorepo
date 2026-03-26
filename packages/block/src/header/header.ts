@@ -1,5 +1,11 @@
-import { Common, ConsensusAlgorithm, ConsensusType, Hardfork, Mainnet } from '@ethereumjs/common'
-import { RLP } from '@ethereumjs/rlp'
+import {
+  Common,
+  ConsensusAlgorithm,
+  ConsensusType,
+  Hardfork,
+  Mainnet,
+} from '@feelyourprotocol/common'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   Address,
   BIGINT_0,
@@ -19,7 +25,7 @@ import {
   equalsBytes,
   hexToBytes,
   toType,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import {

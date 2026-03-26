@@ -1,16 +1,16 @@
-import { RLP } from '@ethereumjs/rlp'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   Account,
   hexToBytes,
   isHexString,
   unpadBytes,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import { MerklePatriciaTrie } from '../mpt.ts'
 
-import type { AccountState, GenesisState } from '@ethereumjs/common'
+import type { AccountState, GenesisState } from '@feelyourprotocol/common'
 
 /**
  * Derives the stateRoot of the genesis block based on genesis allocations

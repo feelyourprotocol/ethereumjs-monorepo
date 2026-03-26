@@ -1,12 +1,12 @@
-import { MerklePatriciaTrie } from '@ethereumjs/mpt'
-import { RLP } from '@ethereumjs/rlp'
-import type { TxOptions, TypedTransaction } from '@ethereumjs/tx'
+import { MerklePatriciaTrie } from '@feelyourprotocol/mpt'
+import { RLP } from '@feelyourprotocol/rlp'
+import type { TxOptions, TypedTransaction } from '@feelyourprotocol/tx'
 import {
   createTx,
   createTxFromBlockBodyData,
   createTxFromRLP,
   normalizeTxParams,
-} from '@ethereumjs/tx'
+} from '@feelyourprotocol/tx'
 import {
   EthereumJSErrorWithoutCode,
   bigIntToHex,
@@ -18,7 +18,7 @@ import {
   hexToBytes,
   intToHex,
   isHexString,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import { generateCliqueBlockExtraData } from '../consensus/clique.ts'
 import { genTransactionsTrieRoot, genWithdrawalsTrieRoot } from '../helpers.ts'
@@ -30,7 +30,7 @@ import {
   executionPayloadFromBeaconPayload,
 } from '../index.ts'
 
-import type { EthersProvider, WithdrawalBytes } from '@ethereumjs/util'
+import type { EthersProvider, WithdrawalBytes } from '@feelyourprotocol/util'
 import type { BeaconPayloadJSON } from '../from-beacon-payload.ts'
 import type {
   BlockBytes,

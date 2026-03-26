@@ -1,4 +1,4 @@
-import { EthereumJSErrorWithoutCode, equalsBytes } from '@ethereumjs/util'
+import { EthereumJSErrorWithoutCode, equalsBytes } from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import { createMPTFromProof } from '../index.ts'

@@ -1,5 +1,5 @@
-import { RLP } from '@ethereumjs/rlp'
-import { BIGINT_0, EthereumJSErrorWithoutCode, bytesToBigInt } from '@ethereumjs/util'
+import { RLP } from '@feelyourprotocol/rlp'
+import { BIGINT_0, EthereumJSErrorWithoutCode, bytesToBigInt } from '@feelyourprotocol/util'
 
 import type { EIP8141CompatibleTx } from '../types.ts'
 

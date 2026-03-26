@@ -1,4 +1,4 @@
-import type { BigIntLike, KZG, PrefixedHexString } from '@ethereumjs/util'
+import type { BigIntLike, KZG, PrefixedHexString } from '@feelyourprotocol/util'
 import type { secp256k1 } from '@noble/curves/secp256k1.js'
 import type { ConsensusAlgorithm, ConsensusType, Hardfork } from './enums.ts'
 

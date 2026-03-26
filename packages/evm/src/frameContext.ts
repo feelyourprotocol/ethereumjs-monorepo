@@ -6,8 +6,8 @@
  * optional property — set by the VM before the frame loop, cleared after.
  */
 
-import type { FrameEIP8141Tx } from '@ethereumjs/tx'
-import type { Address, PrefixedHexString } from '@ethereumjs/util'
+import type { FrameEIP8141Tx } from '@feelyourprotocol/tx'
+import type { Address, PrefixedHexString } from '@feelyourprotocol/util'
 
 export const FRAME_MODE = {
   DEFAULT: 0,

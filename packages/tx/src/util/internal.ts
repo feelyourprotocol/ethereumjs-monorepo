@@ -1,4 +1,4 @@
-import { Common, Mainnet } from '@ethereumjs/common'
+import { Common, Mainnet } from '@feelyourprotocol/common'
 import {
   Address,
   EthereumJSErrorWithoutCode,
@@ -9,7 +9,7 @@ import {
   bytesToHex,
   hexToBytes,
   toBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import { paramsTx } from '../params.ts'
 

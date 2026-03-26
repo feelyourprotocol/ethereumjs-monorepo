@@ -5,10 +5,15 @@
  * The EVM holds a FrameExecutionContext = { tx, state } during execution.
  */
 
-import { ENTRY_POINT_ADDRESS, FRAME_MODE } from '@ethereumjs/evm'
-import type { ExecResult, FrameExecutionState, FrameResult, ParsedFrame } from '@ethereumjs/evm'
-import { RLP } from '@ethereumjs/rlp'
-import type { FrameBytes, FrameEIP8141Tx } from '@ethereumjs/tx'
+import { ENTRY_POINT_ADDRESS, FRAME_MODE } from '@feelyourprotocol/evm'
+import type {
+  ExecResult,
+  FrameExecutionState,
+  FrameResult,
+  ParsedFrame,
+} from '@feelyourprotocol/evm'
+import { RLP } from '@feelyourprotocol/rlp'
+import type { FrameBytes, FrameEIP8141Tx } from '@feelyourprotocol/tx'
 import {
   Account,
   Address,
@@ -22,10 +27,10 @@ import {
   equalsBytes,
   hexToBytes,
   publicToAddress,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
-import type { Block } from '@ethereumjs/block'
+import type { Block } from '@feelyourprotocol/block'
 import type { RunTxOpts, RunTxResult } from './types.ts'
 import type { VM } from './vm.ts'
 

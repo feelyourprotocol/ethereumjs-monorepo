@@ -1,7 +1,7 @@
 // Some more secure presets when using e.g. JS `call`
 'use strict'
 
-import { RLP } from '@ethereumjs/rlp'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   BIGINT_0,
   EthereumJSErrorWithoutCode,
@@ -17,7 +17,7 @@ import {
   concatBytes,
   equalsBytes,
   isDebugEnabled,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 import debug from 'debug'
 
@@ -35,7 +35,7 @@ import { _walkTrie } from './util/asyncWalk.ts'
 import { bytesToNibbles, matchingNibbleLength, nibblesTypeToPackedBytes } from './util/nibbles.ts'
 import { WalkController } from './util/walkController.ts'
 
-import type { BatchDBOp, DB } from '@ethereumjs/util'
+import type { BatchDBOp, DB } from '@feelyourprotocol/util'
 import type { Debugger } from 'debug'
 import type {
   BranchMPTNodeBranchValue,
@@ -51,7 +51,7 @@ import type {
 import type { OnFound } from './util/asyncWalk.ts'
 
 /**
- * The basic trie interface, use with `import { MerklePatriciaTrie } from '@ethereumjs/mpt'`.
+ * The basic trie interface, use with `import { MerklePatriciaTrie } from '@feelyourprotocol/mpt'`.
  *
  * A MerklePatriciaTrie object can be created with the constructor method:
  *

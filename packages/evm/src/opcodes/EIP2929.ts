@@ -1,6 +1,6 @@
-import { BIGINT_0, bytesToHex } from '@ethereumjs/util'
+import { BIGINT_0, bytesToHex } from '@feelyourprotocol/util'
 
-import type { Common } from '@ethereumjs/common'
+import type { Common } from '@feelyourprotocol/common'
 import type { RunState } from '../interpreter.ts'
 
 /**

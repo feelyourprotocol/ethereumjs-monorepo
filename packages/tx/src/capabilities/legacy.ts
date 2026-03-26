@@ -9,7 +9,7 @@ import {
   ecrecover,
   publicToAddress,
   unpadBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { secp256k1 } from '@noble/curves/secp256k1.js'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 

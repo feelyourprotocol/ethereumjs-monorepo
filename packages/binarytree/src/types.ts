@@ -1,6 +1,6 @@
-import { utf8ToBytes } from '@ethereumjs/util'
+import { utf8ToBytes } from '@feelyourprotocol/util'
 
-import type { DB, ValueEncoding } from '@ethereumjs/util'
+import type { DB, ValueEncoding } from '@feelyourprotocol/util'
 
 export interface BinaryTreeOpts {
   /**

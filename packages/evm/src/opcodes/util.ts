@@ -1,4 +1,4 @@
-import { Hardfork } from '@ethereumjs/common'
+import { Hardfork } from '@feelyourprotocol/common'
 import {
   BIGINT_0,
   BIGINT_1,
@@ -12,13 +12,13 @@ import {
   equalsBytes,
   setLengthLeft,
   setLengthRight,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import { EVMError } from '../errors.ts'
 
-import type { Common } from '@ethereumjs/common'
-import type { Address } from '@ethereumjs/util'
+import type { Common } from '@feelyourprotocol/common'
+import type { Address } from '@feelyourprotocol/util'
 import type { EVMErrorType } from '../errors.ts'
 import type { RunState } from '../interpreter.ts'
 
@@ -71,7 +71,7 @@ export function createAddressFromStackBigInt(value: bigint): Address {
 }
 
 /**
- * Proxy function for @ethereumjs/util's setLengthLeft, except it returns a zero
+ * Proxy function for @feelyourprotocol/util's setLengthLeft, except it returns a zero
  * length Uint8Array in case the Uint8Array is full of zeros.
  * @param value Uint8Array which we want to pad
  */
