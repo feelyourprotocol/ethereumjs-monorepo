@@ -154,6 +154,10 @@ export async function runFrameTransaction(
       state.frameResults.push(frameResult)
       totalFrameGasUsed += frameResult.gasUsed
 
+      if (_opts.onFrameExecuted) {
+        await _opts.onFrameExecuted({ frameIndex: i, frame, result: frameResult, state })
+      }
+
       if (frame.mode === FRAME_MODE.VERIFY && !state.approveCalledInCurrentFrame) {
         txInvalid = true
         invalidReason = 'VERIFY frame did not call APPROVE'

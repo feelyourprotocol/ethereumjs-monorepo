@@ -5,8 +5,8 @@
  * Common initialization, type registration, serialization round-trip,
  * JSON representation, factory integration.
  */
-import { Common, Hardfork, Mainnet } from '@ethereumjs/common'
-import { bytesToHex, hexToBytes } from '@ethereumjs/util'
+import { Common, Hardfork, Mainnet } from '@feelyourprotocol/common'
+import { bytesToHex, hexToBytes } from '@feelyourprotocol/util'
 import { assert, describe, it } from 'vitest'
 
 import {

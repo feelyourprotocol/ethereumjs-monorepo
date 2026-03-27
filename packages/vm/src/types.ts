@@ -5,6 +5,7 @@ import type {
   EVMMockBlockchainInterface,
   EVMOpts,
   EVMResult,
+  FrameExecutionInfo,
   Log,
 } from '@feelyourprotocol/evm'
 import type { AccessList, TypedTransaction } from '@feelyourprotocol/tx'
@@ -443,6 +444,12 @@ export interface RunTxOpts {
    * To obtain an accurate tx receipt input the block gas used up until this tx.
    */
   blockGasUsed?: bigint
+
+  /**
+   * Optional callback invoked after each frame in an EIP-8141 frame transaction.
+   * Receives a snapshot of the frame, its result, and the current execution state.
+   */
+  onFrameExecuted?: (info: FrameExecutionInfo) => Promise<void>
 }
 
 /**

@@ -1,5 +1,5 @@
-import { Common, Hardfork, Mainnet } from '@ethereumjs/common'
-import { type FrameEIP8141TxData, createFrameEIP8141Tx } from '@ethereumjs/tx'
+import { Common, Hardfork, Mainnet } from '@feelyourprotocol/common'
+import { type FrameEIP8141TxData, createFrameEIP8141Tx } from '@feelyourprotocol/tx'
 import {
   Account,
   Address,
@@ -9,7 +9,7 @@ import {
   hexToBytes,
   privateToPublic,
   publicToAddress,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { secp256k1 } from '@noble/curves/secp256k1.js'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 import { assert, describe, it } from 'vitest'

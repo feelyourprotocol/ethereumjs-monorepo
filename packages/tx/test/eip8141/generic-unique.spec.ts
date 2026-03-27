@@ -5,8 +5,8 @@
  * explicit sender, no ECDSA signatures, frame validation, computed gasLimit,
  * signature hash with VERIFY data elision, blob field constraints.
  */
-import { Common, Hardfork, Mainnet } from '@ethereumjs/common'
-import { bytesToBigInt, bytesToHex, hexToBytes } from '@ethereumjs/util'
+import { Common, Hardfork, Mainnet } from '@feelyourprotocol/common'
+import { bytesToBigInt, bytesToHex, hexToBytes } from '@feelyourprotocol/util'
 import { assert, describe, it } from 'vitest'
 
 import { createFrameEIP8141Tx } from '../../src/index.ts'

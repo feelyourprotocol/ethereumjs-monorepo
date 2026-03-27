@@ -47,6 +47,16 @@ export interface FrameExecutionState {
 }
 
 /**
+ * Snapshot passed to the optional `onFrameExecuted` callback after each frame.
+ */
+export interface FrameExecutionInfo {
+  frameIndex: number
+  frame: ParsedFrame
+  result: FrameResult
+  state: FrameExecutionState
+}
+
+/**
  * The frame execution context set on the EVM during EIP-8141 frame tx processing.
  * Combines the immutable transaction with mutable execution state.
  */
