@@ -4,7 +4,7 @@ import {
   bytesToUnprefixedHex,
   concatBytes,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { keccak_256 } from '@noble/hashes/sha3.js'
 
 import { MerklePatriciaTrie, ROOT_DB_KEY, updateMPTFromMerkleProof } from './index.ts'

@@ -1,4 +1,4 @@
-import { EthereumJSErrorWithoutCode } from '@ethereumjs/util'
+import { EthereumJSErrorWithoutCode } from '@feelyourprotocol/util'
 
 type EVMPerformanceLogEntry = {
   calls: number

@@ -1,4 +1,4 @@
-import { isDebugEnabled } from '@ethereumjs/util'
+import { isDebugEnabled } from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 
 import type { Debugger } from 'debug'

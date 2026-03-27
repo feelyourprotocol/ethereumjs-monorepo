@@ -1,9 +1,10 @@
-import { EthereumJSErrorWithoutCode, fetchFromProvider, getProvider } from '@ethereumjs/util'
+import { EthereumJSErrorWithoutCode, fetchFromProvider, getProvider } from '@feelyourprotocol/util'
 
 import { createFeeMarket1559Tx, createFeeMarket1559TxFromRLP } from './1559/constructors.ts'
 import { createAccessList2930Tx, createAccessList2930TxFromRLP } from './2930/constructors.ts'
 import { createBlob4844Tx, createBlob4844TxFromRLP } from './4844/constructors.ts'
 import { createEOACode7702Tx, createEOACode7702TxFromRLP } from './7702/constructors.ts'
+import { createFrameEIP8141Tx, createFrameEIP8141TxFromRLP } from './8141/constructors.ts'
 import {
   createLegacyTx,
   createLegacyTxFromBytesArray,
@@ -15,11 +16,12 @@ import {
   isBlob4844TxData,
   isEOACode7702TxData,
   isFeeMarket1559TxData,
+  isFrameEIP8141TxData,
   isLegacyTxData,
 } from './types.ts'
 import { normalizeTxParams } from './util/general.ts'
 
-import type { EthersProvider } from '@ethereumjs/util'
+import type { EthersProvider } from '@feelyourprotocol/util'
 import type { Transaction, TxData, TxOptions, TypedTxData } from './types.ts'
 /**
  * Create a transaction from a `txData` object
@@ -45,6 +47,8 @@ export function createTx<T extends TransactionType>(
       return createBlob4844Tx(txData, txOptions) as Transaction[T]
     } else if (isEOACode7702TxData(txData)) {
       return createEOACode7702Tx(txData, txOptions) as Transaction[T]
+    } else if (isFrameEIP8141TxData(txData)) {
+      return createFrameEIP8141Tx(txData, txOptions) as Transaction[T]
     } else {
       throw EthereumJSErrorWithoutCode(
         `Tx instantiation with type ${(txData as TypedTxData)?.type} not supported`,
@@ -74,6 +78,8 @@ export function createTxFromRLP<T extends TransactionType>(
         return createBlob4844TxFromRLP(data, txOptions) as Transaction[T]
       case TransactionType.EOACodeEIP7702:
         return createEOACode7702TxFromRLP(data, txOptions) as Transaction[T]
+      case TransactionType.FrameEIP8141:
+        return createFrameEIP8141TxFromRLP(data, txOptions) as Transaction[T]
       default:
         throw EthereumJSErrorWithoutCode(`TypedTransaction with ID ${data[0]} unknown`)
     }

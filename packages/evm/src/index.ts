@@ -71,4 +71,5 @@ export {
 export * from './binaryTreeAccessWitness.ts'
 export * from './constructors.ts'
 export * from './eip7708.ts'
+export * from './frameContext.ts'
 export * from './params.ts'

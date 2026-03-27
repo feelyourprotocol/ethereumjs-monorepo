@@ -1,7 +1,7 @@
-import { BIGINT_0, EthereumJSErrorWithoutCode, createZeroAddress } from '@ethereumjs/util'
+import { BIGINT_0, EthereumJSErrorWithoutCode, createZeroAddress } from '@feelyourprotocol/util'
 
-import type { BinaryTreeAccessWitnessInterface } from '@ethereumjs/common'
-import type { Address, PrefixedHexString } from '@ethereumjs/util'
+import type { BinaryTreeAccessWitnessInterface } from '@feelyourprotocol/common'
+import type { Address, PrefixedHexString } from '@feelyourprotocol/util'
 import type { PrecompileFunc } from './precompiles/index.ts'
 import type { EOFEnv, SelfdestructMap } from './types.ts'
 

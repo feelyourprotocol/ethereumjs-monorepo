@@ -1,4 +1,4 @@
-import { bytesToHex } from '@ethereumjs/util'
+import { bytesToHex } from '@feelyourprotocol/util'
 
 import { EVMError } from '../errors.ts'
 import type { EVM } from '../evm.ts'

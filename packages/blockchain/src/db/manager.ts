@@ -1,5 +1,5 @@
-import { createBlockFromBytesArray, createBlockHeaderFromBytesArray } from '@ethereumjs/block'
-import { RLP } from '@ethereumjs/rlp'
+import { createBlockFromBytesArray, createBlockHeaderFromBytesArray } from '@feelyourprotocol/block'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   EthereumJSErrorWithoutCode,
   KECCAK256_RLP,
@@ -8,14 +8,14 @@ import {
   bytesToHex,
   equalsBytes,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import { Cache } from './cache.ts'
 import { DBOp, DBTarget } from './operation.ts'
 
-import type { Block, BlockBodyBytes, BlockBytes, BlockOptions } from '@ethereumjs/block'
-import type { Common } from '@ethereumjs/common'
-import type { BatchDBOp, DB, DBObject, DelBatch, PutBatch } from '@ethereumjs/util'
+import type { Block, BlockBodyBytes, BlockBytes, BlockOptions } from '@feelyourprotocol/block'
+import type { Common } from '@feelyourprotocol/common'
+import type { BatchDBOp, DB, DBObject, DelBatch, PutBatch } from '@feelyourprotocol/util'
 import type { DatabaseKey } from './operation.ts'
 
 /**

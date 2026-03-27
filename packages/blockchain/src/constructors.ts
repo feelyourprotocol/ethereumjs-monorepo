@@ -1,11 +1,11 @@
-import { createBlock } from '@ethereumjs/block'
+import { createBlock } from '@feelyourprotocol/block'
 import {
   BIGINT_0,
   EthereumJSErrorWithoutCode,
   bytesToHex,
   equalsBytes,
   isDebugEnabled,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 
 import {
@@ -17,8 +17,8 @@ import {
   getGenesisStateRoot,
 } from './index.ts'
 
-import type { BlockData } from '@ethereumjs/block'
-import type { Chain } from '@ethereumjs/common'
+import type { BlockData } from '@feelyourprotocol/block'
+import type { Chain } from '@feelyourprotocol/common'
 import type { BlockchainOptions, DBOp } from './index.ts'
 
 const DEBUG = isDebugEnabled('ethjs')

@@ -1,4 +1,4 @@
-import { concatBytes, hexToBytes, unprefixedHexToBytes } from '@ethereumjs/util'
+import { concatBytes, hexToBytes, unprefixedHexToBytes } from '@feelyourprotocol/util'
 
 import { nibblesTypeToPackedBytes } from './nibbles.ts'
 

@@ -1,13 +1,13 @@
-import { Common, Mainnet } from '@ethereumjs/common'
-import { EVMMockBlockchain, createEVM, getActivePrecompiles } from '@ethereumjs/evm'
-import { MerkleStateManager } from '@ethereumjs/statemanager'
+import { Common, Mainnet } from '@feelyourprotocol/common'
+import { EVMMockBlockchain, createEVM, getActivePrecompiles } from '@feelyourprotocol/evm'
+import { MerkleStateManager } from '@feelyourprotocol/statemanager'
 import {
   Account,
   Address,
   EthereumJSErrorWithoutCode,
   createAccount,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import { VM } from './vm.ts'
 

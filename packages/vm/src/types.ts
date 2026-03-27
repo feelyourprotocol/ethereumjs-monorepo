@@ -1,13 +1,14 @@
-import type { Block, BlockOptions, HeaderData } from '@ethereumjs/block'
-import type { Common, ParamsDict, StateManagerInterface } from '@ethereumjs/common'
+import type { Block, BlockOptions, HeaderData } from '@feelyourprotocol/block'
+import type { Common, ParamsDict, StateManagerInterface } from '@feelyourprotocol/common'
 import type {
   EVMInterface,
   EVMMockBlockchainInterface,
   EVMOpts,
   EVMResult,
+  FrameExecutionInfo,
   Log,
-} from '@ethereumjs/evm'
-import type { AccessList, TypedTransaction } from '@ethereumjs/tx'
+} from '@feelyourprotocol/evm'
+import type { AccessList, TypedTransaction } from '@feelyourprotocol/tx'
 import type {
   BigIntLike,
   BlockLevelAccessList,
@@ -15,7 +16,7 @@ import type {
   CLRequestType,
   PrefixedHexString,
   WithdrawalData,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import type { Bloom } from './bloom/index.ts'
 export type TxReceipt = PreByzantiumTxReceipt | PostByzantiumTxReceipt | EIP4844BlobTxReceipt
 
@@ -108,7 +109,7 @@ export interface VMOpts {
    * - `hardfork`: `mainnet` hardforks up to the `Paris` hardfork
    * - `eips`: `2537` (usage e.g. `eips: [ 2537, ]`)
    *
-   * Note: check the associated `@ethereumjs/evm` instance options
+   * Note: check the associated `@feelyourprotocol/evm` instance options
    * documentation for supported EIPs.
    *
    * ### Default Setup
@@ -155,7 +156,7 @@ export interface VMOpts {
   setHardfork?: boolean | BigIntLike
   /**
    * VM parameters sorted by EIP can be found in the exported `paramsVM` dictionary,
-   * which is internally passed to the associated `@ethereumjs/common` instance which
+   * which is internally passed to the associated `@feelyourprotocol/common` instance which
    * manages parameter selection based on the hardfork and EIP settings.
    *
    * This option allows providing a custom set of parameters. Note that parameters
@@ -252,7 +253,7 @@ export interface SealBlockOpts {
  */
 export interface RunBlockOpts {
   /**
-   * The @ethereumjs/block to process
+   * The @feelyourprotocol/block to process
    */
   block: Block
   /**
@@ -391,12 +392,12 @@ export interface AfterBlockEvent extends RunBlockResult {
  */
 export interface RunTxOpts {
   /**
-   * The `@ethereumjs/block` the `tx` belongs to.
+   * The `@feelyourprotocol/block` the `tx` belongs to.
    * If omitted, a default blank block will be used.
    */
   block?: Block
   /**
-   * An `@ethereumjs/tx` to run
+   * An `@feelyourprotocol/tx` to run
    */
   tx: TypedTransaction
   /**
@@ -443,6 +444,12 @@ export interface RunTxOpts {
    * To obtain an accurate tx receipt input the block gas used up until this tx.
    */
   blockGasUsed?: bigint
+
+  /**
+   * Optional callback invoked after each frame in an EIP-8141 frame transaction.
+   * Receives a snapshot of the frame, its result, and the current execution state.
+   */
+  onFrameExecuted?: (info: FrameExecutionInfo) => Promise<void>
 }
 
 /**

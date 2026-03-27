@@ -1,4 +1,4 @@
-import { EthereumJSErrorWithoutCode, equalsBytes } from '@ethereumjs/util'
+import { EthereumJSErrorWithoutCode, equalsBytes } from '@feelyourprotocol/util'
 
 import { createBinaryTree } from './constructors.ts'
 import { decodeBinaryNode } from './node/index.ts'

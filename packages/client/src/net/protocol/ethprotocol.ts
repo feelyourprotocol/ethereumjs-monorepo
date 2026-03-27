@@ -9,6 +9,7 @@ import {
   isBlob4844Tx,
   isEOACode7702Tx,
   isFeeMarket1559Tx,
+  isFrameEIP8141Tx,
   isLegacyTx,
 } from '@ethereumjs/tx'
 import {
@@ -255,7 +256,12 @@ export class EthProtocol extends Protocol {
           // serialize txs as per type
           if (isBlob4844Tx(tx)) {
             serializedTxs.push(tx.serializeNetworkWrapper())
-          } else if (isFeeMarket1559Tx(tx) || isAccessList2930Tx(tx) || isEOACode7702Tx(tx)) {
+          } else if (
+            isFeeMarket1559Tx(tx) ||
+            isAccessList2930Tx(tx) ||
+            isEOACode7702Tx(tx) ||
+            isFrameEIP8141Tx(tx)
+          ) {
             serializedTxs.push(tx.serialize())
           } else if (isLegacyTx(tx)) {
             serializedTxs.push(tx.raw())

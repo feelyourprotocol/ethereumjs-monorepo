@@ -3,12 +3,18 @@ import type {
   Common,
   ParamsDict,
   StateManagerInterface,
-} from '@ethereumjs/common'
-import type { Account, Address, BlockLevelAccessList, PrefixedHexString } from '@ethereumjs/util'
+} from '@feelyourprotocol/common'
+import type {
+  Account,
+  Address,
+  BlockLevelAccessList,
+  PrefixedHexString,
+} from '@feelyourprotocol/util'
 import type { EventEmitter } from 'eventemitter3'
 import type { BinaryTreeAccessWitness } from './binaryTreeAccessWitness.ts'
 import type { EOFContainer } from './eof/container.ts'
 import type { EVMError } from './errors.ts'
+import type { FrameExecutionContext } from './frameContext.ts'
 import type { InterpreterStep, RunState } from './interpreter.ts'
 import type { Message } from './message.ts'
 import type { AsyncDynamicGasHandler, SyncDynamicGasHandler } from './opcodes/gas.ts'
@@ -183,6 +189,7 @@ export interface EVMInterface {
   binaryTreeAccessWitness?: BinaryTreeAccessWitness
   systemBinaryTreeAccessWitness?: BinaryTreeAccessWitness
   blockLevelAccessList?: BlockLevelAccessList
+  frameExecutionContext?: FrameExecutionContext
 }
 
 export type EVMProfilerOpts = {
@@ -259,7 +266,7 @@ export interface EVMOpts {
 
   /**
    * EVM parameters sorted by EIP can be found in the exported `paramsEVM` dictionary,
-   * which is internally passed to the associated `@ethereumjs/common` instance which
+   * which is internally passed to the associated `@feelyourprotocol/common` instance which
    * manages parameter selection based on the hardfork and EIP settings.
    *
    * This option allows providing a custom set of parameters. Note that parameters
@@ -353,9 +360,9 @@ export interface EVMOpts {
   /*
    * The EVM comes with a basic dependency-minimized `SimpleStateManager` implementation
    * which serves most code execution use cases and which is included in the
-   * `@ethereumjs/statemanager` package.
+   * `@feelyourprotocol/statemanager` package.
    *
-   * The `@ethereumjs/statemanager` package also provides a variety of state manager
+   * The `@feelyourprotocol/statemanager` package also provides a variety of state manager
    * implementations for different needs (MPT-tree backed, RPC, experimental binary tree)
    * which can be used by this option as a replacement.
    */
@@ -366,7 +373,7 @@ export interface EVMOpts {
    * non-block containing use cases.
    *
    * For block-containing setups use the full blockchain implementation from the
-   * `@ethereumjs/blockchain package.
+   * `@feelyourprotocol/blockchain package.
    */
   blockchain?: EVMMockBlockchainInterface
 
@@ -382,7 +389,7 @@ export interface EVMOpts {
   blockLevelAccessList?: BlockLevelAccessList
 
   /**
-   * When running the EVM with PoA consensus, the `cliqueSigner` function from the `@ethereumjs/block` class
+   * When running the EVM with PoA consensus, the `cliqueSigner` function from the `@feelyourprotocol/block` class
    * must be provided along with a `BlockHeader` so that the coinbase can be correctly retrieved when the
    * `Interpreter.getBlockCoinbase` method is called.
    */

@@ -1,11 +1,11 @@
-import { Hardfork } from '@ethereumjs/common'
-import { EthereumJSErrorWithoutCode } from '@ethereumjs/util'
+import { Hardfork } from '@feelyourprotocol/common'
+import { EthereumJSErrorWithoutCode } from '@feelyourprotocol/util'
 
 import { handlers } from './functions.ts'
 import { dynamicGasHandlers } from './gas.ts'
 import { getFullname } from './util.ts'
 
-import type { Common } from '@ethereumjs/common'
+import type { Common } from '@feelyourprotocol/common'
 import { type CustomOpcode, isAddOpcode } from '../types.ts'
 import type { OpHandler } from './functions.ts'
 import type { AsyncDynamicGasHandler, SyncDynamicGasHandler } from './gas.ts'
@@ -385,6 +385,15 @@ const eipOpcodes: { eip: number; opcodes: OpcodeEntry }[] = [
     eip: 7939,
     opcodes: {
       0x1e: defaultOp('CLZ'),
+    },
+  },
+  {
+    eip: 8141,
+    opcodes: {
+      0xaa: asyncOp('APPROVE'),
+      0xb0: defaultOp('TXPARAM'),
+      0xb1: defaultOp('FRAMEDATALOAD'),
+      0xb2: dynamicGasOp('FRAMEDATACOPY'),
     },
   },
 ]

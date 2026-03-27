@@ -1,9 +1,9 @@
-import { createBlock, genRequestsRoot } from '@ethereumjs/block'
-import { ConsensusType, Hardfork } from '@ethereumjs/common'
-import { type EVM, type EVMInterface } from '@ethereumjs/evm'
-import { MerklePatriciaTrie } from '@ethereumjs/mpt'
-import { RLP } from '@ethereumjs/rlp'
-import { TransactionType } from '@ethereumjs/tx'
+import { createBlock, genRequestsRoot } from '@feelyourprotocol/block'
+import { ConsensusType, Hardfork } from '@feelyourprotocol/common'
+import { type EVM, type EVMInterface } from '@feelyourprotocol/evm'
+import { MerklePatriciaTrie } from '@feelyourprotocol/mpt'
+import { RLP } from '@feelyourprotocol/rlp'
+import { TransactionType } from '@feelyourprotocol/tx'
 import {
   Account,
   Address,
@@ -25,7 +25,7 @@ import {
   setLengthLeft,
   short,
   unprefixedHexToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { sha256 } from '@noble/hashes/sha2.js'
 import debugDefault from 'debug'
 
@@ -34,9 +34,9 @@ import { emitEVMProfile } from './emitEVMProfile.ts'
 import { runTx } from './index.ts'
 import { accumulateRequests } from './requests.ts'
 
-import type { Block } from '@ethereumjs/block'
-import type { Common } from '@ethereumjs/common'
-import type { CLRequest, CLRequestType, PrefixedHexString } from '@ethereumjs/util'
+import type { Block } from '@feelyourprotocol/block'
+import type { Common } from '@feelyourprotocol/common'
+import type { CLRequest, CLRequestType, PrefixedHexString } from '@feelyourprotocol/util'
 import type {
   AfterBlockEvent,
   ApplyBlockResult,

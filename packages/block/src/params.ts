@@ -1,4 +1,4 @@
-import type { ParamsDict } from '@ethereumjs/common'
+import type { ParamsDict } from '@feelyourprotocol/common'
 
 export const paramsBlock: ParamsDict = {
   /**

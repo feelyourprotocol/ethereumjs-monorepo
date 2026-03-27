@@ -1,4 +1,4 @@
-import { Hardfork } from '@ethereumjs/common'
+import { Hardfork } from '@feelyourprotocol/common'
 import {
   BIGINT_0,
   BIGINT_1,
@@ -9,7 +9,7 @@ import {
   bigIntToBytes,
   equalsBytes,
   setLengthLeft,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 
 import { EOFErrorMessage } from '../eof/errors.ts'
 import { EVMError } from '../errors.ts'
@@ -34,8 +34,8 @@ import {
   updateSstoreGas,
 } from './util.ts'
 
-import type { Common } from '@ethereumjs/common'
-import type { Address } from '@ethereumjs/util'
+import type { Common } from '@feelyourprotocol/common'
+import type { Address } from '@feelyourprotocol/util'
 import type { RunState } from '../interpreter.ts'
 
 const EXTCALL_TARGET_MAX = BigInt(2) ** BigInt(8 * 20) - BigInt(1)
@@ -1317,3 +1317,13 @@ const logDynamicFunc = dynamicGasHandlers.get(0xa0)!
 for (let i = 0xa1; i <= 0xa4; i++) {
   dynamicGasHandlers.set(i, logDynamicFunc)
 }
+
+// EIP-8141: FRAMEDATACOPY dynamic gas (matches CALLDATACOPY)
+dynamicGasHandlers.set(0xb2, async function (runState, gas, common): Promise<bigint> {
+  const [memOffset, _dataOffset, dataLength] = runState.stack.peek(4)
+  gas += subMemUsage(runState, memOffset, dataLength, common)
+  if (dataLength !== BIGINT_0) {
+    gas += common.param('copyGas') * divCeil(dataLength, BIGINT_32)
+  }
+  return gas
+})

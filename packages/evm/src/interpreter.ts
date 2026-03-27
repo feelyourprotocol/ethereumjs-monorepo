@@ -1,4 +1,4 @@
-import { ConsensusAlgorithm } from '@ethereumjs/common'
+import { ConsensusAlgorithm } from '@feelyourprotocol/common'
 import {
   Account,
   BIGINT_0,
@@ -13,7 +13,7 @@ import {
   equalsBytes,
   setLengthLeft,
   setLengthRight,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 
 import {
@@ -37,8 +37,8 @@ import type {
   BinaryTreeAccessWitnessInterface,
   Common,
   StateManagerInterface,
-} from '@ethereumjs/common'
-import type { Address, PrefixedHexString } from '@ethereumjs/util'
+} from '@feelyourprotocol/common'
+import type { Address, PrefixedHexString } from '@feelyourprotocol/util'
 import { stackDelta } from './eof/stackDelta.ts'
 import type { EVM } from './evm.ts'
 import type { Journal } from './journal.ts'

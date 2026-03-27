@@ -1,5 +1,5 @@
-import { RLP } from '@ethereumjs/rlp'
-import { EthereumJSErrorWithoutCode, bitsToBytes, bytesToBits } from '@ethereumjs/util'
+import { RLP } from '@feelyourprotocol/rlp'
+import { EthereumJSErrorWithoutCode, bitsToBytes, bytesToBits } from '@feelyourprotocol/util'
 
 import { BinaryNodeType } from './types.ts'
 

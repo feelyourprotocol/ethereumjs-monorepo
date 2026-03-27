@@ -1,4 +1,4 @@
-import { bytesToHex } from '@ethereumjs/util'
+import { bytesToHex } from '@feelyourprotocol/util'
 import { sha256 } from '@noble/hashes/sha2.js'
 
 import { OOGResult } from '../evm.ts'

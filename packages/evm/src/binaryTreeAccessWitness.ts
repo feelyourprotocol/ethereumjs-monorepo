@@ -4,8 +4,8 @@ import type {
   BinaryTreeAccessedState,
   BinaryTreeAccessedStateWithAddress,
   RawBinaryTreeAccessedState,
-} from '@ethereumjs/common'
-import { BinaryTreeAccessedStateType } from '@ethereumjs/common'
+} from '@feelyourprotocol/common'
+import { BinaryTreeAccessedStateType } from '@feelyourprotocol/common'
 import {
   BIGINT_0,
   BINARY_TREE_BASIC_DATA_LEAF_KEY,
@@ -22,13 +22,13 @@ import {
   getBinaryTreeStem,
   hexToBytes,
   intToBytes,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 
-import type { BinaryTree } from '@ethereumjs/binarytree'
-import type { StatefulBinaryTreeStateManager } from '@ethereumjs/statemanager'
+import type { BinaryTree } from '@feelyourprotocol/binarytree'
+import type { StatefulBinaryTreeStateManager } from '@feelyourprotocol/statemanager'
 
-import type { Address, BinaryTreeExecutionWitness, PrefixedHexString } from '@ethereumjs/util'
+import type { Address, BinaryTreeExecutionWitness, PrefixedHexString } from '@feelyourprotocol/util'
 import { ChunkCache } from './chunkCache.ts'
 import { StemCache } from './stemCache.ts'
 

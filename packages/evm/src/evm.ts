@@ -1,5 +1,5 @@
-import { Hardfork } from '@ethereumjs/common'
-import type { BlockLevelAccessList, PrefixedHexString } from '@ethereumjs/util'
+import { Hardfork } from '@feelyourprotocol/common'
+import type { BlockLevelAccessList, PrefixedHexString } from '@feelyourprotocol/util'
 import {
   Account,
   Address,
@@ -18,7 +18,7 @@ import {
   generateAddress2,
   isDebugEnabled,
   short,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import debugDefault from 'debug'
 import { EventEmitter } from 'eventemitter3'
 
@@ -26,6 +26,7 @@ import { createEIP7708TransferLog } from './eip7708.ts'
 import { FORMAT } from './eof/constants.ts'
 import { isEOF } from './eof/util.ts'
 import { EVMError } from './errors.ts'
+import type { FrameExecutionContext } from './frameContext.ts'
 import { Interpreter } from './interpreter.ts'
 import { Journal } from './journal.ts'
 import { EVMPerformanceLogger } from './logger.ts'
@@ -51,7 +52,7 @@ import {
   type Log,
 } from './types.ts'
 
-import type { Common, StateManagerInterface } from '@ethereumjs/common'
+import type { Common, StateManagerInterface } from '@feelyourprotocol/common'
 import type { BinaryTreeAccessWitness } from './binaryTreeAccessWitness.ts'
 import type { InterpreterOpts } from './interpreter.ts'
 import type { Timer } from './logger.ts'
@@ -198,6 +199,9 @@ export class EVM implements EVMInterface {
   }
   protected _block?: Block
 
+  /** EIP-8141 frame execution context, set by the VM during frame tx execution */
+  public frameExecutionContext?: FrameExecutionContext
+
   public readonly common: Common
   public readonly events: EventEmitter<EVMEvent>
 
@@ -294,7 +298,7 @@ export class EVM implements EVMInterface {
       1153, 1559, 2537, 2565, 2718, 2929, 2930, 2935, 3198, 3529, 3540, 3541, 3607, 3651, 3670,
       3855, 3860, 4200, 4399, 4750, 4788, 4844, 4895, 5133, 5450, 5656, 6110, 6206, 6780, 7002,
       7069, 7251, 7480, 7516, 7594, 7620, 7685, 7691, 7692, 7698, 7702, 7709, 7823, 7825, 7934,
-      7939, 7951, 8024,
+      7939, 7951, 8024, 8141,
     ]
 
     for (const eip of this.common.eips()) {

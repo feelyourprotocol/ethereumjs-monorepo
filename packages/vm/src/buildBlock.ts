@@ -4,15 +4,15 @@ import {
   genRequestsRoot,
   genTransactionsTrieRoot,
   genWithdrawalsTrieRoot,
-} from '@ethereumjs/block'
-import { ConsensusType, Hardfork } from '@ethereumjs/common'
-import { MerklePatriciaTrie } from '@ethereumjs/mpt'
-import { RLP } from '@ethereumjs/rlp'
+} from '@feelyourprotocol/block'
+import { ConsensusType, Hardfork } from '@feelyourprotocol/common'
+import { MerklePatriciaTrie } from '@feelyourprotocol/mpt'
+import { RLP } from '@feelyourprotocol/rlp'
 import {
   Blob4844Tx,
   NetworkWrapperType,
   createMinimal4844TxFromNetworkWrapper,
-} from '@ethereumjs/tx'
+} from '@feelyourprotocol/tx'
 import {
   Address,
   BIGINT_0,
@@ -26,7 +26,7 @@ import {
   createZeroAddress,
   toBytes,
   toType,
-} from '@ethereumjs/util'
+} from '@feelyourprotocol/util'
 import { sha256 } from '@noble/hashes/sha2.js'
 
 import { Bloom } from './bloom/index.ts'
@@ -40,9 +40,9 @@ import {
   rewardAccount,
 } from './runBlock.ts'
 
-import type { Block, HeaderData } from '@ethereumjs/block'
-import type { TypedTransaction } from '@ethereumjs/tx'
-import type { Withdrawal } from '@ethereumjs/util'
+import type { Block, HeaderData } from '@feelyourprotocol/block'
+import type { TypedTransaction } from '@feelyourprotocol/tx'
+import type { Withdrawal } from '@feelyourprotocol/util'
 import type { BuildBlockOpts, BuilderOpts, RunTxResult, SealBlockOpts } from './types.ts'
 import type { VM } from './vm.ts'
 

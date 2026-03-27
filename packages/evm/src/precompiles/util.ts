@@ -1,4 +1,4 @@
-import { short } from '@ethereumjs/util'
+import { short } from '@feelyourprotocol/util'
 
 import type { PrecompileInput } from './index.ts'
 
